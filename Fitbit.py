@@ -7,9 +7,9 @@ import datetime as dt
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import plotly.express as px
-#TESTTTTTT
-#Makes the code more reusable 
-FILENAME = "daily_acivity.csv"
+
+#Makes the code adaptable 
+FILENAME = 'Data_Engineering/daily_acivity.csv'
 
 df = pd.read_csv(FILENAME)
 
@@ -25,7 +25,7 @@ def totalDistance():
   plt.ylabel('Total Distance')
   plt.show()
 
-# Function to display calories burnt over a date range for a specific user
+# Function to display calories burnt over a certain date range for a specific user
 def plot_calories_burnt(user_id, start_date=None, end_date=None):
     user_data = df[df['Id'] == user_id]
     user_data['ActivityDate'] = pd.to_datetime(user_data['ActivityDate'])
@@ -54,12 +54,15 @@ def workoutPerDay():
   plt.show()
   
 
-# Linear regression model for Calories burnt vs. Total Steps
-df['Id'] = df['Id'].astype(str)  # Ensure Id is a categorical variable
-model = smf.ols('Calories ~ TotalSteps + Id', data=df).fit()
-print(model.summary())
+#Calories burnt vs. Total Steps
 
-# Scatterplot with regression line
+def linearRegression():
+  df['Id'] = df['Id'].astype(str)  # Ensure Id is a categorical variable
+  model = smf.ols('Calories ~ TotalSteps + Id', data=df).fit()
+  print(model.summary())
+
+
+# TODO:Scatterplot with regression line /does not work correctly
 def plot_regression(user_id):
     user_data = df[df['Id'] == user_id]
     sns.lmplot(x='TotalSteps', y='Calories', data=user_data)
@@ -70,7 +73,8 @@ def plot_regression(user_id):
 
 #Addtional Part, made for the creative Part does not have to be definitive
 def plot_sunburst():
-    df_filtered = df[df['TotalSteps'] > 0]  # Remove rows where TotalSteps is zero
+    #Avoids error if totalsteps ==0
+    df_filtered = df[df['TotalSteps'] > 0]  
     df_filtered['Weekday'] = df_filtered['ActivityDate'].dt.day_name()
     
     if df_filtered.empty:
@@ -85,7 +89,8 @@ def plot_sunburst():
 
 if __name__ == "__main__":
   plot_regression(1624580081)
-  printUniqueUsers()
-  totalDistance()
-  plot_sunburst()
+  workoutPerDay()
+  # printUniqueUsers()
+  # totalDistance()
+  # plot_sunburst()
 
