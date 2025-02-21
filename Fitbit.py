@@ -8,6 +8,7 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import plotly.express as px
 
+
 #Makes the code adaptable 
 FILENAME = 'Data_Engineering/daily_acivity.csv'
 
@@ -30,6 +31,7 @@ def plot_calories_burnt(user_id, start_date=None, end_date=None):
     user_data = df[df['Id'] == user_id]
     user_data['ActivityDate'] = pd.to_datetime(user_data['ActivityDate'])
     
+    #Makes sure that start and end date are provided or it won't execute
     if start_date and end_date:
         mask = (user_data['ActivityDate'] >= start_date) & (user_data['ActivityDate'] <= end_date)
         user_data = user_data[mask]
@@ -73,12 +75,12 @@ def plot_regression(user_id):
 
 #Addtional Part, made for the creative Part does not have to be definitive
 def plot_sunburst():
-    #Avoids error if totalsteps ==0
+    #Avoids error if totalsteps = 0
     df_filtered = df[df['TotalSteps'] > 0]  
     df_filtered['Weekday'] = df_filtered['ActivityDate'].dt.day_name()
     
     if df_filtered.empty:
-        print("No valid data available for the Sunburst chart.")
+        print("No valid data available.")
         return
 
     fig = px.sunburst(df_filtered, path=['Weekday', 'Id'], values='TotalSteps', 
@@ -88,8 +90,7 @@ def plot_sunburst():
 
 
 if __name__ == "__main__":
-  plot_regression(1624580081)
-  workoutPerDay()
+   linearRegression()
   # printUniqueUsers()
   # totalDistance()
   # plot_sunburst()
