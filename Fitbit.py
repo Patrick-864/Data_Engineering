@@ -11,7 +11,7 @@ import plotly.express as px
 
 #Makes the code adaptable 
 FILENAME = 'Data_Engineering/daily_acivity.csv'
-
+print("Hello World")
 df = pd.read_csv(FILENAME)
 
 def printUniqueUsers():
