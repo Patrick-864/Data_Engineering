@@ -7,6 +7,8 @@ import datetime as dt
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import plotly.express as px
+import sqlite3
+
 
 #Makes the code adaptable 
 FILENAME = 'daily_acivity.csv'
@@ -157,3 +159,64 @@ def runAll(id):
 
 if __name__ == "__main__":
   runAll(1624580081)
+
+db_path =  "fitbit_database.db"
+conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
+
+
+#this function classifies the users based on the frquency of their activity"
+# the function returns a dataframe where the users are either classified ass heavy, moderate or light user.
+#The dataframe has 2 cols, 1 with the id the other one with the class of activity
+def classify_users():
+    query = """ SELECT Id, COUNT(*) as activity_count FROM daily_activity GROUP BY Id"""
+    cursor.execute(query)
+    results = cursor.fetchall()
+    
+    classified_users = []
+    for row in results:
+        user_id, activity_count = row
+        if activity_count <= 10:
+            user_class = "Light user"
+        elif 11 <= activity_count <= 15:
+            user_class = "Moderate user"
+        else:
+            user_class = "Heavy user"
+        classified_users.append((user_id, user_class))
+    
+    return pd.DataFrame(classified_users, columns=["Id", "Class"])
+
+#This function analyses the correleation between the sleep duration and the amount of activity
+#The function returns nothing, and displays a plot after it is executed
+def sleep_vs_activity():
+    query = """
+        SELECT m.Id, SUM(m.value) as total_sleep, 
+               SUM(d.VeryActiveMinutes + d.FairlyActiveMinutes + d.LightlyActiveMinutes) as total_active 
+        FROM minute_sleep m 
+        JOIN daily_activity d ON m.Id = d.Id
+        GROUP BY m.Id
+    """
+    cursor.execute(query)
+    results = cursor.fetchall()
+    df = pd.DataFrame(results, columns=["Id", "total_sleep", "total_active"]).dropna()
+    
+    if df.empty:
+        print("No data available for sleep vs. activity analysis.")
+        return
+
+    model = smf.ols('total_sleep ~ total_active', data=df).fit()
+    print(model.summary())
+    
+    sns.regplot(x=df["total_active"], y=df["total_sleep"])
+    plt.xlabel("Total Active Minutes")
+    plt.ylabel("Total Sleep (minutes)")
+    plt.title("Sleep Duration vs. Active Minutes")
+    plt.show()
+
+
+classified_users_df = classify_users()
+
+# Display classified users
+print("Classified Users:")
+print(classified_users_df.head())
+conn.close()
