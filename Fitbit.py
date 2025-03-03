@@ -219,4 +219,56 @@ classified_users_df = classify_users()
 # Display classified users
 print("Classified Users:")
 print(classified_users_df.head())
+
+def sedentary_vs_sleep():
+    query = """
+        SELECT d.Id, d.SedentaryMinutes, SUM(m.value) as total_sleep
+        FROM daily_activity d
+        JOIN minute_sleep m ON d.Id = m.Id
+        GROUP BY d.Id
+    """
+    cursor.execute(query)
+    results = cursor.fetchall()
+    df = pd.DataFrame(results, columns=["Id", "SedentaryMinutes", "total_sleep"]).dropna()
+    
+    if df.empty:
+        print("No data available for sedentary vs. sleep analysis.")
+        return
+    
+    model = smf.ols("total_sleep ~ SedentaryMinutes", data=df).fit()
+    print(model.summary())
+    
+    sns.regplot(x=df["SedentaryMinutes"], y=df["total_sleep"])
+    plt.xlabel("Sedentary Minutes")
+    plt.ylabel("Total Sleep (minutes)")
+    plt.title("Sedentary Activity vs. Sleep Duration")
+    plt.show()
+
+# 4. Breaking down the day into 4-hour blocks
+def activity_by_time_blocks():
+    query = """
+        SELECT Id, ActivityHour, Calories 
+        FROM hourly_calories
+    """
+    cursor.execute(query)
+    results = cursor.fetchall()
+    df = pd.DataFrame(results, columns=["Id", "ActivityHour", "Calories"]).dropna()
+    
+    df["ActivityHour"] = pd.to_datetime(df["ActivityHour"], errors="coerce")
+    
+    if df["ActivityHour"].isna().all():
+        print("Failed to parse ActivityHour. Check data format.")
+        return
+    
+    df["hour"] = df["ActivityHour"].dt.hour
+    bins = [0, 4, 8, 12, 16, 20, 24]
+    labels = ['0-4', '4-8', '8-12', '12-16', '16-20', '20-24']
+    df["time_block"] = pd.cut(df["hour"], bins=bins, labels=labels, include_lowest=True)
+    df_grouped = df.groupby("time_block")["Calories"].sum()
+    
+    df_grouped.plot(kind="bar", figsize=(10, 5))
+    plt.title("Calories Burned Breakdown by Time Block")
+    plt.xlabel("Time Block")
+    plt.ylabel("Total Calories")
+    plt.show()
 conn.close()
