@@ -155,7 +155,7 @@ def runAll(id):
   workoutPerDay()
   linear_regression_for_user(id)
   plot_regression(id)
-  plot_sunburst()
+  #plot_sunburst()
 
 if __name__ == "__main__":
   runAll(1624580081)
@@ -164,7 +164,9 @@ db_path =  "fitbit_database.db"
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
-
+def sleepDuration():
+    #TODO
+    print("Hello")
 #this function classifies the users based on the frquency of their activity"
 # the function returns a dataframe where the users are either classified ass heavy, moderate or light user.
 #The dataframe has 2 cols, 1 with the id the other one with the class of activity
@@ -220,6 +222,12 @@ classified_users_df = classify_users()
 print("Classified Users:")
 print(classified_users_df.head())
 
+
+def heartRate(id):
+    #TODO
+    print("Hello")
+
+
 def sedentary_vs_sleep():
     query = """
         SELECT d.Id, d.SedentaryMinutes, SUM(m.value) as total_sleep
@@ -271,4 +279,15 @@ def activity_by_time_blocks():
     plt.xlabel("Time Block")
     plt.ylabel("Total Calories")
     plt.show()
+
+
+def steps_by_time_blocks():
+    #TODO
+    print("Hello")
+
+def steps_by_time_blocks():
+    #TODO
+    print("Hello")
+
+
 conn.close()
