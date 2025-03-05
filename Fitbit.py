@@ -6,7 +6,6 @@ import numpy as np
 import datetime as dt
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-import plotly.express as px
 import sqlite3
 
 
@@ -130,22 +129,23 @@ def plot_regression(user_id):
     print(f"\nFor user {user_id}, Beta_1 = {beta_1:.2f}.\n"
           f"Interpretation: Each additional step increases calories burned by ~{beta_1:.2f}.")
 
-def plot_sunburst():
-    """
-    An additional optional plot (using plotly) that shows a sunburst chart 
-    of total steps by weekday and user.
-    """
-    df_filtered = df[df['TotalSteps'] > 0].copy()
-    df_filtered['Weekday'] = df_filtered['ActivityDate'].dt.day_name()
+#This feature has to be new implemented used not the correct library
+# def plot_sunburst():
+#     """
+#     An additional optional plot (using plotly) that shows a sunburst chart 
+#     of total steps by weekday and user.
+#     """
+#     df_filtered = df[df['TotalSteps'] > 0].copy()
+#     df_filtered['Weekday'] = df_filtered['ActivityDate'].dt.day_name()
     
-    if df_filtered.empty:
-        print("No valid data available for the Sunburst chart.")
-        return
+#     if df_filtered.empty:
+#         print("No valid data available for the Sunburst chart.")
+#         return
 
-    fig = px.sunburst(df_filtered, path=['Weekday', 'Id'], values='TotalSteps', 
-                      title='Daily Activity Breakdown by User and Weekday', 
-                      color='TotalSteps', color_continuous_scale='Blues')
-    fig.show()
+#     fig = px.sunburst(df_filtered, path=['Weekday', 'Id'], values='TotalSteps', 
+#                       title='Daily Activity Breakdown by User and Weekday', 
+#                       color='TotalSteps', color_continuous_scale='Blues')
+#     fig.show()
 
 def runAll(id):
   printUniqueUsers()
