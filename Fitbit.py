@@ -260,19 +260,19 @@ def activity_by_time_blocks():
     """
     cursor.execute(query)
     results = cursor.fetchall()
-    df = pd.DataFrame(results, columns=["Id", "ActivityHour", "Calories"]).dropna()
+    df_block = pd.DataFrame(results, columns=["Id", "ActivityHour", "Calories"]).dropna()
     
-    df["ActivityHour"] = pd.to_datetime(df["ActivityHour"], errors="coerce")
+    df_block["ActivityHour"] = pd.to_datetime(df_block["ActivityHour"], errors="coerce")
     
-    if df["ActivityHour"].isna().all():
+    if df_block["ActivityHour"].isna().all():
         print("Failed to parse ActivityHour. Check data format.")
         return
     
-    df["hour"] = df["ActivityHour"].dt.hour
+    df_block["hour"] = df_block["ActivityHour"].dt.hour
     bins = [0, 4, 8, 12, 16, 20, 24]
     labels = ['0-4', '4-8', '8-12', '12-16', '16-20', '20-24']
-    df["time_block"] = pd.cut(df["hour"], bins=bins, labels=labels, include_lowest=True)
-    df_grouped = df.groupby("time_block")["Calories"].sum()
+    df_block["time_block"] = pd.cut(df_block["hour"], bins=bins, labels=labels, include_lowest=True)
+    df_grouped = df_block.groupby("time_block")["Calories"].sum()
     
     df_grouped.plot(kind="bar", figsize=(10, 5))
     plt.title("Calories Burned Breakdown by Time Block")
@@ -282,12 +282,37 @@ def activity_by_time_blocks():
 
 
 def steps_by_time_blocks():
-    #TODO
-    print("Hello")
+    query = "SELECT Id, ActivityHour, StepTotal FROM hourly_steps"
+    cursor.execute(query)
+    results = cursor.fetchall()
+    if not results:
+        print("No data available from hourly_steps.")
+        return
+    df_steps = pd.DataFrame(results, columns=["Id", "ActivityHour", "Steps"])
+    df_steps['ActivityHour'] = pd.to_datetime(df_steps['ActivityHour'], errors='coerce')
+    if df_steps['ActivityHour'].isna().all():
+        print("Failed to parse Time in hourly_steps.")
+        return
+    df_steps['Hour'] = df_steps['ActivityHour'].dt.hour
+    bins = [0, 4, 8, 12, 16, 20, 24]
+    labels = ['0-4', '4-8', '8-12', '12-16', '16-20', '20-24']
+    df_steps['time_block'] = pd.cut(df_steps['Hour'], bins=bins, labels=labels, include_lowest=True)
+    df_grouped = df_steps.groupby("time_block")["Steps"].mean().reset_index()
+    df_grouped.plot(kind="bar", x="time_block", y="Steps", figsize=(10, 5), title="Average Steps by 4-hour Block")
+    plt.xlabel("Time Block")
+    plt.ylabel("Average Steps")
+    plt.show()
 
-def steps_by_time_blocks():
-    #TODO
-    print("Hello")
+
+def tempDebugInfo():
+    cursor.execute("PRAGMA table_info(hourly_steps)")
+    columns_info = cursor.fetchall()
+
+
+    print(columns_info)
+    cursor.execute("SELECT DISTINCT Id FROM heart_rate")
+    userInfo = cursor.fetchall();
+    print(userInfo)
 
 
 conn.close()
