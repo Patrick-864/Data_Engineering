@@ -162,166 +162,162 @@ def run_first_part(df,id):
 if __name__ == "__main__":
   df = load_csv()
   run_first_part(df,1624580081)
-#########################################2nd Part #################################
 
-# db_path =  "fitbit_database.db"
-# conn = sqlite3.connect(db_path)
-# cursor = conn.cursor()
 
-# def sleepDuration():
-#     #TODO
-#     print("Hello")
-# #this function classifies the users based on the frquency of their activity"
-# # the function returns a dataframe where the users are either classified ass heavy, moderate or light user.
-# #The dataframe has 2 cols, 1 with the id the other one with the class of activity
-# def classify_users():
-#     query = """ SELECT Id, COUNT(*) as activity_count FROM daily_activity GROUP BY Id"""
-#     cursor.execute(query)
-#     results = cursor.fetchall()
+db_path =  "fitbit_database.db"
+conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
+
+def sleepDuration():
+    #TODO
+    print("Hello")
+#this function classifies the users based on the frquency of their activity"
+# the function returns a dataframe where the users are either classified ass heavy, moderate or light user.
+#The dataframe has 2 cols, 1 with the id the other one with the class of activity
+def classify_users():
+    query = """ SELECT Id, COUNT(*) as activity_count FROM daily_activity GROUP BY Id"""
+    cursor.execute(query)
+    results = cursor.fetchall()
     
-#     classified_users = []
-#     for row in results:
-#         user_id, activity_count = row
-#         if activity_count <= 10:
-#             user_class = "Light user"
-#         elif 11 <= activity_count <= 15:
-#             user_class = "Moderate user"
-#         else:
-#             user_class = "Heavy user"
-#         classified_users.append((user_id, user_class))
+    classified_users = []
+    for row in results:
+        user_id, activity_count = row
+        if activity_count <= 10:
+            user_class = "Light user"
+        elif 11 <= activity_count <= 15:
+            user_class = "Moderate user"
+        else:
+            user_class = "Heavy user"
+        classified_users.append((user_id, user_class))
     
-#     return pd.DataFrame(classified_users, columns=["Id", "Class"])
+    return pd.DataFrame(classified_users, columns=["Id", "Class"])
 
-# #This function analyses the correleation between the sleep duration and the amount of activity
-# #The function returns nothing, and displays a plot after it is executed
-# def sleep_vs_activity():
-#     query = """
-#         SELECT m.Id, SUM(m.value) as total_sleep, 
-#                SUM(d.VeryActiveMinutes + d.FairlyActiveMinutes + d.LightlyActiveMinutes) as total_active 
-#         FROM minute_sleep m 
-#         JOIN daily_activity d ON m.Id = d.Id
-#         GROUP BY m.Id
-#     """
-#     cursor.execute(query)
-#     results = cursor.fetchall()
-#     df = pd.DataFrame(results, columns=["Id", "total_sleep", "total_active"]).dropna()
+#This function analyses the correleation between the sleep duration and the amount of activity
+#The function returns nothing, and displays a plot after it is executed
+def sleep_vs_activity():
+    query = """
+        SELECT m.Id, SUM(m.value) as total_sleep, 
+               SUM(d.VeryActiveMinutes + d.FairlyActiveMinutes + d.LightlyActiveMinutes) as total_active 
+        FROM minute_sleep m 
+        JOIN daily_activity d ON m.Id = d.Id
+        GROUP BY m.Id
+    """
+    cursor.execute(query)
+    results = cursor.fetchall()
+    df = pd.DataFrame(results, columns=["Id", "total_sleep", "total_active"]).dropna()
     
-#     if df.empty:
-#         print("No data available for sleep vs. activity analysis.")
-#         return
+    if df.empty:
+        print("No data available for sleep vs. activity analysis.")
+        return
 
-#     model = smf.ols('total_sleep ~ total_active', data=df).fit()
-#     print(model.summary())
+    model = smf.ols('total_sleep ~ total_active', data=df).fit()
+    print(model.summary())
     
-#     sns.regplot(x=df["total_active"], y=df["total_sleep"])
-#     plt.xlabel("Total Active Minutes")
-#     plt.ylabel("Total Sleep (minutes)")
-#     plt.title("Sleep Duration vs. Active Minutes")
-#     plt.show()
+    sns.regplot(x=df["total_active"], y=df["total_sleep"])
+    plt.xlabel("Total Active Minutes")
+    plt.ylabel("Total Sleep (minutes)")
+    plt.title("Sleep Duration vs. Active Minutes")
+    plt.show()
 
 
-# classified_users_df = classify_users()
+classified_users_df = classify_users()
 
-# # Display classified users
-# print("Classified Users:")
-# print(classified_users_df.head())
-
-
-# def heartRate(id):
-#     #TODO
-#     print("Hello")
+# Display classified users
+print("Classified Users:")
+print(classified_users_df.head())
 
 
-# def sedentary_vs_sleep():
-#     query = """
-#         SELECT d.Id, d.SedentaryMinutes, SUM(m.value) as total_sleep
-#         FROM daily_activity d
-#         JOIN minute_sleep m ON d.Id = m.Id
-#         GROUP BY d.Id
-#     """
-#     cursor.execute(query)
-#     results = cursor.fetchall()
-#     df = pd.DataFrame(results, columns=["Id", "SedentaryMinutes", "total_sleep"]).dropna()
+def heartRate(id):
+    #TODO
+    print("Hello")
+
+
+def sedentary_vs_sleep():
+    query = """
+        SELECT d.Id, d.SedentaryMinutes, SUM(m.value) as total_sleep
+        FROM daily_activity d
+        JOIN minute_sleep m ON d.Id = m.Id
+        GROUP BY d.Id
+    """
+    cursor.execute(query)
+    results = cursor.fetchall()
+    df = pd.DataFrame(results, columns=["Id", "SedentaryMinutes", "total_sleep"]).dropna()
     
-#     if df.empty:
-#         print("No data available for sedentary vs. sleep analysis.")
-#         return
+    if df.empty:
+        print("No data available for sedentary vs. sleep analysis.")
+        return
     
-#     model = smf.ols("total_sleep ~ SedentaryMinutes", data=df).fit()
-#     print(model.summary())
+    model = smf.ols("total_sleep ~ SedentaryMinutes", data=df).fit()
+    print(model.summary())
     
-#     sns.regplot(x=df["SedentaryMinutes"], y=df["total_sleep"])
-#     plt.xlabel("Sedentary Minutes")
-#     plt.ylabel("Total Sleep (minutes)")
-#     plt.title("Sedentary Activity vs. Sleep Duration")
-#     plt.show()
+    sns.regplot(x=df["SedentaryMinutes"], y=df["total_sleep"])
+    plt.xlabel("Sedentary Minutes")
+    plt.ylabel("Total Sleep (minutes)")
+    plt.title("Sedentary Activity vs. Sleep Duration")
+    plt.show()
 
-# # 4. Breaking down the day into 4-hour blocks
-# def activity_by_time_blocks():
-#     query = """
-#         SELECT Id, ActivityHour, Calories 
-#         FROM hourly_calories
-#     """
-#     cursor.execute(query)
-#     results = cursor.fetchall()
-#     df_block = pd.DataFrame(results, columns=["Id", "ActivityHour", "Calories"]).dropna()
+# 4. Breaking down the day into 4-hour blocks
+def activity_by_time_blocks():
+    query = """
+        SELECT Id, ActivityHour, Calories 
+        FROM hourly_calories
+    """
+    cursor.execute(query)
+    results = cursor.fetchall()
+    df_block = pd.DataFrame(results, columns=["Id", "ActivityHour", "Calories"]).dropna()
     
-#     df_block["ActivityHour"] = pd.to_datetime(df_block["ActivityHour"], errors="coerce")
+    df_block["ActivityHour"] = pd.to_datetime(df_block["ActivityHour"], errors="coerce")
     
-#     if df_block["ActivityHour"].isna().all():
-#         print("Failed to parse ActivityHour. Check data format.")
-#         return
+    if df_block["ActivityHour"].isna().all():
+        print("Failed to parse ActivityHour. Check data format.")
+        return
     
-#     df_block["hour"] = df_block["ActivityHour"].dt.hour
-#     bins = [0, 4, 8, 12, 16, 20, 24]
-#     labels = ['0-4', '4-8', '8-12', '12-16', '16-20', '20-24']
-#     df_block["time_block"] = pd.cut(df_block["hour"], bins=bins, labels=labels, include_lowest=True)
-#     df_grouped = df_block.groupby("time_block")["Calories"].sum()
+    df_block["hour"] = df_block["ActivityHour"].dt.hour
+    bins = [0, 4, 8, 12, 16, 20, 24]
+    labels = ['0-4', '4-8', '8-12', '12-16', '16-20', '20-24']
+    df_block["time_block"] = pd.cut(df_block["hour"], bins=bins, labels=labels, include_lowest=True)
+    df_grouped = df_block.groupby("time_block")["Calories"].sum()
     
-#     df_grouped.plot(kind="bar", figsize=(10, 5))
-#     plt.title("Calories Burned Breakdown by Time Block")
-#     plt.xlabel("Time Block")
-#     plt.ylabel("Total Calories")
-#     plt.show()
+    df_grouped.plot(kind="bar", figsize=(10, 5))
+    plt.title("Calories Burned Breakdown by Time Block")
+    plt.xlabel("Time Block")
+    plt.ylabel("Total Calories")
+    plt.show()
 
 
-# def steps_by_time_blocks():
-#     query = "SELECT Id, ActivityHour, StepTotal FROM hourly_steps"
-#     cursor.execute(query)
-#     results = cursor.fetchall()
-#     if not results:
-#         print("No data available from hourly_steps.")
-#         return
-#     df_steps = pd.DataFrame(results, columns=["Id", "ActivityHour", "Steps"])
-#     df_steps['ActivityHour'] = pd.to_datetime(df_steps['ActivityHour'], errors='coerce')
-#     if df_steps['ActivityHour'].isna().all():
-#         print("Failed to parse Time in hourly_steps.")
-#         return
-#     df_steps['Hour'] = df_steps['ActivityHour'].dt.hour
-#     bins = [0, 4, 8, 12, 16, 20, 24]
-#     labels = ['0-4', '4-8', '8-12', '12-16', '16-20', '20-24']
-#     df_steps['time_block'] = pd.cut(df_steps['Hour'], bins=bins, labels=labels, include_lowest=True)
-#     df_grouped = df_steps.groupby("time_block")["Steps"].mean().reset_index()
-#     df_grouped.plot(kind="bar", x="time_block", y="Steps", figsize=(10, 5), title="Average Steps by 4-hour Block")
-#     plt.xlabel("Time Block")
-#     plt.ylabel("Average Steps")
-#     plt.show()
+def steps_by_time_blocks():
+    query = "SELECT Id, ActivityHour, StepTotal FROM hourly_steps"
+    cursor.execute(query)
+    results = cursor.fetchall()
+    if not results:
+        print("No data available from hourly_steps.")
+        return
+    df_steps = pd.DataFrame(results, columns=["Id", "ActivityHour", "Steps"])
+    df_steps['ActivityHour'] = pd.to_datetime(df_steps['ActivityHour'], errors='coerce')
+    if df_steps['ActivityHour'].isna().all():
+        print("Failed to parse Time in hourly_steps.")
+        return
+    df_steps['Hour'] = df_steps['ActivityHour'].dt.hour
+    bins = [0, 4, 8, 12, 16, 20, 24]
+    labels = ['0-4', '4-8', '8-12', '12-16', '16-20', '20-24']
+    df_steps['time_block'] = pd.cut(df_steps['Hour'], bins=bins, labels=labels, include_lowest=True)
+    df_grouped = df_steps.groupby("time_block")["Steps"].mean().reset_index()
+    df_grouped.plot(kind="bar", x="time_block", y="Steps", figsize=(10, 5), title="Average Steps by 4-hour Block")
+    plt.xlabel("Time Block")
+    plt.ylabel("Average Steps")
+    plt.show()
 
 
-# def tempDebugInfo():
-#     cursor.execute("PRAGMA table_info(hourly_steps)")
-#     columns_info = cursor.fetchall()
+def tempDebugInfo():
+    cursor.execute("PRAGMA table_info(hourly_steps)")
+    columns_info = cursor.fetchall()
 
 
-#     print(columns_info)
-#     cursor.execute("SELECT DISTINCT Id FROM heart_rate")
-#     userInfo = cursor.fetchall();
-#     print(userInfo)
-
-# def runCode():
-#     print("Hello")
+    print(columns_info)
+    cursor.execute("SELECT DISTINCT Id FROM heart_rate")
+    userInfo = cursor.fetchall();
+    print(userInfo)
 
 
-# if __name__ == "__main__":
-#     runCode()
+conn.close()
 
