@@ -7,21 +7,40 @@ import datetime as dt
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import sqlite3
-
+import logging
 
 #Makes the code adaptable 
 FILENAME = 'daily_acivity.csv'
 
-df = pd.read_csv(FILENAME)
-df['Id'] = df['Id'].astype(str)
-df['ActivityDate'] = pd.to_datetime(df['ActivityDate'])
 
-def printUniqueUsers():
+###Initiliazes the connection to the data base
+def db_init(dataBase_path="fitbit_database.db"):
+    try:
+        conn = sqlite3.connect(dataBase_path)
+        return conn
+    except Exception as e:
+        print("Error connecting to database:", e)
+        raise
+
+
+def load_csv(filename='daily_acivity.csv'):
+    try:
+        df = pd.read_csv(filename)
+        df['Id'] = df['Id'].astype(str)
+        df['ActivityDate'] = pd.to_datetime(df['ActivityDate'])
+        logging.info("CSV file loaded successfully.")
+        return df
+    except Exception as e:
+        logging.error(f"Error loading CSV file: {e}")
+        return None
+
+
+def printUniqueUsers(df):
   unique_users = df['Id'].nunique()
   print(f"Number of unique users: {unique_users}")
 
 
-def totalDistance():
+def totalDistance(df):
   total_distance_per_user = df.groupby('Id')['TotalDistance'].sum()
   total_distance_per_user.plot(kind='bar', figsize=(10,5), title='Total Distance per User')
   plt.xlabel('User Id')
@@ -29,7 +48,7 @@ def totalDistance():
   plt.show()
 
 # Function to display calories burnt over a certain date range for a specific user
-def plot_calories_burnt(user_id, start_date=None, end_date=None):
+def plot_calories_burnt(df, user_id, start_date=None, end_date=None):
     # Ensure the user_id is a string to match the DataFrame's 'Id' type
     user_id = str(user_id)
     user_data = df[df['Id'] == user_id].copy()
@@ -58,7 +77,7 @@ def plot_calories_burnt(user_id, start_date=None, end_date=None):
     plt.show()
 
 
-def workoutPerDay(): 
+def workoutPerDay(df): 
   # Convert date and plot frequency of workouts per weekday
   df['ActivityDate'] = pd.to_datetime(df['ActivityDate'])
   df['Weekday'] = df['ActivityDate'].dt.day_name()
@@ -75,7 +94,7 @@ def workoutPerDay():
   Fit a linear regression model: Calories = Beta_0 + Beta_1 * TotalSteps
   for the given user, and print the model summary plus an interpretation of Beta_1.
   """
-def linear_regression_for_user(user_id):
+def linear_regression_for_user(df,user_id):
 
     user_id = str(user_id)
     user_data = df[df['Id'] == user_id]
@@ -97,7 +116,7 @@ def linear_regression_for_user(user_id):
   Display a scatterplot + regression line of Calories vs. TotalSteps for a given user.
   Also prints the interpretation of Beta_1 from the fitted model.
 """
-def plot_regression(user_id):
+def plot_regression(df, user_id):
 
     user_id = str(user_id)
     user_data = df[df['Id'] == user_id]
@@ -129,36 +148,21 @@ def plot_regression(user_id):
     print(f"\nFor user {user_id}, Beta_1 = {beta_1:.2f}.\n"
           f"Interpretation: Each additional step increases calories burned by ~{beta_1:.2f}.")
 
-#This feature has to be new implemented used not the correct library
-# def plot_sunburst():
-#     """
-#     An additional optional plot (using plotly) that shows a sunburst chart 
-#     of total steps by weekday and user.
-#     """
-#     df_filtered = df[df['TotalSteps'] > 0].copy()
-#     df_filtered['Weekday'] = df_filtered['ActivityDate'].dt.day_name()
-    
-#     if df_filtered.empty:
-#         print("No valid data available for the Sunburst chart.")
-#         return
 
-#     fig = px.sunburst(df_filtered, path=['Weekday', 'Id'], values='TotalSteps', 
-#                       title='Daily Activity Breakdown by User and Weekday', 
-#                       color='TotalSteps', color_continuous_scale='Blues')
-#     fig.show()
 
-def runAll(id):
-  printUniqueUsers()
-  totalDistance()
-  plot_calories_burnt(user_id=id, start_date='4/3/2016', end_date='4/4/2016')
+def run_first_part(df,id):
+  printUniqueUsers(df)
+  totalDistance(df)
+  plot_calories_burnt(df,user_id=id, start_date='4/3/2016', end_date='4/4/2016')
+  workoutPerDay(df)
+  linear_regression_for_user(df,id)
+  plot_regression(df,id)
 
-  workoutPerDay()
-  linear_regression_for_user(id)
-  plot_regression(id)
-  #plot_sunburst()
 
 if __name__ == "__main__":
-  runAll(1624580081)
+  df = load_csv()
+  run_first_part(df,1624580081)
+
 
 db_path =  "fitbit_database.db"
 conn = sqlite3.connect(db_path)
@@ -316,3 +320,4 @@ def tempDebugInfo():
 
 
 conn.close()
+
