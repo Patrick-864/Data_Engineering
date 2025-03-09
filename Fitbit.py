@@ -12,9 +12,6 @@ import logging
 #Makes the code adaptable 
 FILENAME = 'daily_acivity.csv'
 
-# df = pd.read_csv(FILENAME)
-# df['Id'] = df['Id'].astype(str)
-# df['ActivityDate'] = pd.to_datetime(df['ActivityDate'])
 
 ###Initiliazes the connection to the data base
 def db_init(dataBase_path="fitbit_database.db"):
@@ -157,7 +154,6 @@ def run_first_part(df,id):
   printUniqueUsers(df)
   totalDistance(df)
   plot_calories_burnt(df,user_id=id, start_date='4/3/2016', end_date='4/4/2016')
-
   workoutPerDay(df)
   linear_regression_for_user(df,id)
   plot_regression(df,id)
@@ -166,6 +162,7 @@ def run_first_part(df,id):
 if __name__ == "__main__":
   df = load_csv()
   run_first_part(df,1624580081)
+#########################################2nd Part #################################
 
 # db_path =  "fitbit_database.db"
 # conn = sqlite3.connect(db_path)
