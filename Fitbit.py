@@ -318,6 +318,10 @@ def tempDebugInfo():
     userInfo = cursor.fetchall();
     print(userInfo)
 
+def runCode():
+    print("Hello")
 
-conn.close()
+
+if __name__ == "__main__":
+    runCode()
 
