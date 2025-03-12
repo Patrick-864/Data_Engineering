@@ -331,7 +331,7 @@ def fill_missing_weight_values(weight_log):
     - Uses forward and backward fill within each participant (Id)
     - Fills remaining missing values with the participant's mean
     """
-    print("\nOriginal missing values:")
+    print("\nOriginal missing values in weight_log:")
     print(weight_log.isnull().sum())
     
     # Replace empty strings and spaces with NaN
@@ -343,7 +343,7 @@ def fill_missing_weight_values(weight_log):
     # Step 2: Fill remaining missing values with the participant's mean
     weight_log['WeightKg'] = weight_log.groupby('Id')['WeightKg'].transform(lambda x: x.fillna(x.mean()))
     
-    print("\nMissing values after filling:")
+    print("\nMissing values in weight_log after filling:")
     print(weight_log.isnull().sum())
     
     return weight_log
@@ -355,39 +355,59 @@ conn = sqlite3.connect(db_path)
 # Load only necessary columns from tables
 daily_activity = pd.read_sql("SELECT Id, Calories AS CaloriesBurned, TotalSteps FROM daily_activity", conn)
 heart_rate = pd.read_sql("SELECT Id, Value AS HeartRate FROM heart_rate", conn)
+weight_log = pd.read_sql("SELECT Id, WeightKg FROM weight_log", conn)
 
 # Convert Id to a common type (string) to avoid mismatches
 daily_activity['Id'] = daily_activity['Id'].astype(str).str.strip()
 heart_rate['Id'] = heart_rate['Id'].astype(str).str.strip()
+weight_log['Id'] = weight_log['Id'].astype(str).str.strip()
 
-# Merge heart_rate with daily_activity
-daily_activity = daily_activity.merge(heart_rate, on='Id', how='inner')
+# Fill missing values in WeightKg
+weight_log = fill_missing_weight_values(weight_log)
+
+# Create two separate merged DataFrames
+merged_weight_activity = daily_activity.merge(weight_log, on='Id', how='inner')
+merged_heart_activity = daily_activity.merge(heart_rate, on='Id', how='inner')
 
 # Print table heads to inspect the data
-print("\nHead of daily_activity (after merging heart_rate):")
-print(daily_activity.head())
-
-# Print Id data types and unique counts before merging
-print("\nData Types of Id Columns:")
-print("daily_activity Id type:", daily_activity['Id'].dtype)
-
-print("\nUnique Ids in daily_activity (after merging heart_rate):", daily_activity['Id'].nunique())
+print("\nHead of merged_weight_activity:")
+print(merged_weight_activity.head())
+print("\nHead of merged_heart_activity:")
+print(merged_heart_activity.head())
 
 # Compute summary statistics per individual
-grouped_stats = daily_activity.groupby('Id').agg({
+summary_weight_activity = merged_weight_activity.groupby('Id').agg({
+    'CaloriesBurned': 'mean',
+    'TotalSteps': 'mean',
+    'WeightKg': 'mean'
+})
+
+summary_heart_activity = merged_heart_activity.groupby('Id').agg({
     'CaloriesBurned': 'mean',
     'TotalSteps': 'mean',
     'HeartRate': 'mean'
 })
 
-print("\nSummary Statistics per Individual:")
-print(grouped_stats.head())
+print("\nSummary Statistics for Weight and Activity:")
+print(summary_weight_activity.head())
+print("\nSummary Statistics for Heart Rate and Activity:")
+print(summary_heart_activity.head())
 
 # Ensure there is data for visualization
-if grouped_stats.dropna().shape[0] > 0:
+if summary_weight_activity.dropna().shape[0] > 0:
+    # Visualization: Weight vs. Calories Burned
+    plt.figure(figsize=(10, 6))
+    plt.scatter(summary_weight_activity['WeightKg'], summary_weight_activity['CaloriesBurned'], alpha=0.7, color='green')
+    plt.xlabel('Weight (Kg)')
+    plt.ylabel('Average Calories Burned')
+    plt.title('Weight vs. Calories Burned per Individual')
+    plt.grid()
+    plt.show()
+
+if summary_heart_activity.dropna().shape[0] > 0:
     # Visualization: Heart Rate vs. Total Steps
     plt.figure(figsize=(10, 6))
-    plt.scatter(grouped_stats['HeartRate'], grouped_stats['TotalSteps'], alpha=0.7, color='blue')
+    plt.scatter(summary_heart_activity['HeartRate'], summary_heart_activity['TotalSteps'], alpha=0.7, color='blue')
     plt.xlabel('Heart Rate')
     plt.ylabel('Total Steps')
     plt.title('Heart Rate vs. Total Steps per Individual')
@@ -396,7 +416,7 @@ if grouped_stats.dropna().shape[0] > 0:
 
     # Visualization: Heart Rate vs. Calories Burned
     plt.figure(figsize=(10, 6))
-    plt.scatter(grouped_stats['HeartRate'], grouped_stats['CaloriesBurned'], alpha=0.7, color='red')
+    plt.scatter(summary_heart_activity['HeartRate'], summary_heart_activity['CaloriesBurned'], alpha=0.7, color='red')
     plt.xlabel('Heart Rate')
     plt.ylabel('Average Calories Burned')
     plt.title('Heart Rate vs. Calories Burned per Individual')
@@ -407,5 +427,3 @@ else:
 
 # Close database connection
 conn.close()
-
-
