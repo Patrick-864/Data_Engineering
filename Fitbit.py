@@ -321,85 +321,91 @@ def tempDebugInfo():
 
 # TEST PART 4
 #part 4
-#1 looking for missing values for weight_log
-# Connect to the Fitbit database
-# Connect to the Fitbit database
-db_path = 'fitbit_database.db'  # Update this path if necessary
-conn = sqlite3.connect(db_path)
-
-# Load weight_log table from database
-query = "SELECT * FROM weight_log"
-weight_log = pd.read_sql(query, conn)
-
-print("\nUnique Ids in weight_log:", weight_log['Id'].nunique())
-print("Total LogIds in weight_log:", weight_log['LogId'].count())
-print("Original Data:")
-print(weight_log.head())
-
-print("Weight Log Table:")
-print(weight_log)
-
-
-weight_log.replace(["", " "], pd.NA, inplace=True)
-print(weight_log.isnull().sum())
-
-
-
-
-# Step 1: Forward and Backward Fill within each participant (Id)
-weight_log['WeightKg'] = weight_log.groupby('Id')['WeightKg'].fillna(method='ffill').fillna(method='bfill')
-weight_log['Fat'] = weight_log.groupby('Id')['Fat'].fillna(method='ffill').fillna(method='bfill')
-
-# Step 2: Fill remaining missing values with the participant's mean
-weight_log['WeightKg'] = weight_log.groupby('Id')['WeightKg'].transform(lambda x: x.fillna(x.mean()))
-weight_log['Fat'] = weight_log.groupby('Id')['Fat'].transform(lambda x: x.fillna(x.mean()))
-
-
-# Count missing values after filling
-missing_values_after = weight_log.replace(["", " "], pd.NA, inplace=True)
-print("\nMissing values after filling:")
-print(missing_values_after)
-
-
-# Close database connection
-conn.close()
-
-
-##2
 import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
+
+def fill_missing_weight_values(weight_log):
+    """
+    Function to fill missing values in WeightKg column.
+    - Uses forward and backward fill within each participant (Id)
+    - Fills remaining missing values with the participant's mean
+    """
+    print("\nOriginal missing values:")
+    print(weight_log.isnull().sum())
+    
+    # Replace empty strings and spaces with NaN
+    weight_log.replace(["", " "], pd.NA, inplace=True)
+    
+    # Step 1: Forward and Backward Fill within each participant (Id)
+    weight_log['WeightKg'] = weight_log.groupby('Id')['WeightKg'].fillna(method='ffill').fillna(method='bfill')
+    
+    # Step 2: Fill remaining missing values with the participant's mean
+    weight_log['WeightKg'] = weight_log.groupby('Id')['WeightKg'].transform(lambda x: x.fillna(x.mean()))
+    
+    print("\nMissing values after filling:")
+    print(weight_log.isnull().sum())
+    
+    return weight_log
 
 # Connect to the Fitbit database
 db_path = 'fitbit_database.db'  # Update this path if necessary
 conn = sqlite3.connect(db_path)
 
 # Load only necessary columns from tables
-weight_log = pd.read_sql("SELECT Id, WeightKg, BMI FROM weight_log", conn)
-daily_activity = pd.read_sql("SELECT Id, Calories AS CaloriesBurned FROM daily_activity", conn)
+daily_activity = pd.read_sql("SELECT Id, Calories AS CaloriesBurned, TotalSteps FROM daily_activity", conn)
 heart_rate = pd.read_sql("SELECT Id, Value AS HeartRate FROM heart_rate", conn)
 
-print("\nUnique Ids in weight_log:", weight_log['Id'].nunique())
-print("Unique Ids in daily_activity:", daily_activity['Id'].nunique())
-print("Unique Ids in heart_rate:", heart_rate['Id'].nunique())
+# Convert Id to a common type (string) to avoid mismatches
+daily_activity['Id'] = daily_activity['Id'].astype(str).str.strip()
+heart_rate['Id'] = heart_rate['Id'].astype(str).str.strip()
+
+# Merge heart_rate with daily_activity
+daily_activity = daily_activity.merge(heart_rate, on='Id', how='inner')
 
 # Print table heads to inspect the data
-print("\nHead of weight_log:")
-print(weight_log.head())
-print("\nHead of daily_activity:")
+print("\nHead of daily_activity (after merging heart_rate):")
 print(daily_activity.head())
-print("\nHead of heart_rate:")
-print(heart_rate.head())
+
+# Print Id data types and unique counts before merging
+print("\nData Types of Id Columns:")
+print("daily_activity Id type:", daily_activity['Id'].dtype)
+
+print("\nUnique Ids in daily_activity (after merging heart_rate):", daily_activity['Id'].nunique())
+
+# Compute summary statistics per individual
+grouped_stats = daily_activity.groupby('Id').agg({
+    'CaloriesBurned': 'mean',
+    'TotalSteps': 'mean',
+    'HeartRate': 'mean'
+})
+
+print("\nSummary Statistics per Individual:")
+print(grouped_stats.head())
+
+# Ensure there is data for visualization
+if grouped_stats.dropna().shape[0] > 0:
+    # Visualization: Heart Rate vs. Total Steps
+    plt.figure(figsize=(10, 6))
+    plt.scatter(grouped_stats['HeartRate'], grouped_stats['TotalSteps'], alpha=0.7, color='blue')
+    plt.xlabel('Heart Rate')
+    plt.ylabel('Total Steps')
+    plt.title('Heart Rate vs. Total Steps per Individual')
+    plt.grid()
+    plt.show()
+
+    # Visualization: Heart Rate vs. Calories Burned
+    plt.figure(figsize=(10, 6))
+    plt.scatter(grouped_stats['HeartRate'], grouped_stats['CaloriesBurned'], alpha=0.7, color='red')
+    plt.xlabel('Heart Rate')
+    plt.ylabel('Average Calories Burned')
+    plt.title('Heart Rate vs. Calories Burned per Individual')
+    plt.grid()
+    plt.show()
+else:
+    print("\nNot enough valid data to generate plots.")
+
 # Close database connection
 conn.close()
 
-    
-    
-
-def runCode():
-    print("Hello")
-
-
-if __name__ == "__main__":
-    runCode()
 
