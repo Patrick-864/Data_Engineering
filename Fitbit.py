@@ -158,21 +158,7 @@ def run_first_part(df,id):
   linear_regression_for_user(df,id)
   plot_regression(df,id)
 
-<<<<<<< HEAD
-  workoutPerDay()
-  linear_regression_for_user(id)
-  plot_regression(id)
-  #plot_sunburst()
 
-# if __name__ == "__main__":
-#   runAll(1624580081)
-=======
-
-if __name__ == "__main__":
-  df = load_csv()
-  run_first_part(df,1624580081)
-
->>>>>>> 0b5550a20b3b30166929f563fa29627b1f10fa5b
 
 db_path =  "fitbit_database.db"
 conn = sqlite3.connect(db_path)
@@ -293,7 +279,6 @@ def activity_by_time_blocks():
     plt.xlabel("Time Block")
     plt.ylabel("Total Calories")
     plt.show()
-<<<<<<< HEAD
 conn.close()
 
 
@@ -364,7 +349,7 @@ print("\nHead of heart_rate:")
 print(heart_rate.head())
 # Close database connection
 conn.close()
-=======
+
 
 
 def steps_by_time_blocks():
@@ -406,5 +391,4 @@ def runCode():
 
 if __name__ == "__main__":
     runCode()
-print("Hello World")
->>>>>>> 0b5550a20b3b30166929f563fa29627b1f10fa5b
+
