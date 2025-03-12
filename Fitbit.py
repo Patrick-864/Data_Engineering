@@ -317,6 +317,83 @@ def tempDebugInfo():
     cursor.execute("SELECT DISTINCT Id FROM heart_rate")
     userInfo = cursor.fetchall();
     print(userInfo)
+    
+ # TEST PART 4
+#part 4
+#1 looking for missing values for weight_log
+# Connect to the Fitbit database
+# Connect to the Fitbit database
+db_path = 'fitbit_database.db'  # Update this path if necessary
+conn = sqlite3.connect(db_path)
+
+# Load weight_log table from database
+query = "SELECT * FROM weight_log"
+weight_log = pd.read_sql(query, conn)
+
+print("\nUnique Ids in weight_log:", weight_log['Id'].nunique())
+print("Total LogIds in weight_log:", weight_log['LogId'].count())
+print("Original Data:")
+print(weight_log.head())
+
+print("Weight Log Table:")
+print(weight_log)
+
+
+weight_log.replace(["", " "], pd.NA, inplace=True)
+print(weight_log.isnull().sum())
+
+
+
+
+# Step 1: Forward and Backward Fill within each participant (Id)
+weight_log['WeightKg'] = weight_log.groupby('Id')['WeightKg'].fillna(method='ffill').fillna(method='bfill')
+weight_log['Fat'] = weight_log.groupby('Id')['Fat'].fillna(method='ffill').fillna(method='bfill')
+
+# Step 2: Fill remaining missing values with the participant's mean
+weight_log['WeightKg'] = weight_log.groupby('Id')['WeightKg'].transform(lambda x: x.fillna(x.mean()))
+weight_log['Fat'] = weight_log.groupby('Id')['Fat'].transform(lambda x: x.fillna(x.mean()))
+
+
+# Count missing values after filling
+missing_values_after = weight_log.replace(["", " "], pd.NA, inplace=True)
+print("\nMissing values after filling:")
+print(missing_values_after)
+
+
+# Close database connection
+conn.close()
+
+
+##2
+import pandas as pd
+import sqlite3
+import matplotlib.pyplot as plt
+
+# Connect to the Fitbit database
+db_path = 'fitbit_database.db'  # Update this path if necessary
+conn = sqlite3.connect(db_path)
+
+# Load only necessary columns from tables
+weight_log = pd.read_sql("SELECT Id, WeightKg, BMI FROM weight_log", conn)
+daily_activity = pd.read_sql("SELECT Id, Calories AS CaloriesBurned FROM daily_activity", conn)
+heart_rate = pd.read_sql("SELECT Id, Value AS HeartRate FROM heart_rate", conn)
+
+print("\nUnique Ids in weight_log:", weight_log['Id'].nunique())
+print("Unique Ids in daily_activity:", daily_activity['Id'].nunique())
+print("Unique Ids in heart_rate:", heart_rate['Id'].nunique())
+
+# Print table heads to inspect the data
+print("\nHead of weight_log:")
+print(weight_log.head())
+print("\nHead of daily_activity:")
+print(daily_activity.head())
+print("\nHead of heart_rate:")
+print(heart_rate.head())
+# Close database connection
+conn.close()
+
+    
+    
 
 def runCode():
     print("Hello")
