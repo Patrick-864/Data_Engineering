@@ -143,21 +143,40 @@ The script expects an SQLite database (`fitbit_database.db`) with the following 
 
 
 
-
-
 ### Expected Output
 
 - A classification table displaying user activity levels.
 - Statistical summaries from regression models.
 - Plots visualizing relationships between sleep, activity, and calorie expenditure.
 
+## Data Wrangling
+This part of the code will help in visualizing the data even more. The wrangilng process helpss with transforming, organzing and cleaning the raw data into a usable and more structured format for analysis. This part of the code will make the data more accessible and more manageable by not only fixing issues as irrelevant information but missing values to. 
 
+### Function
+The first function uses forward and backward fill within each participant (Id) that replaces all the missing values with the participants mean. 
+```python
+fill_missing_weight_values(weight_log):
+```
+### Data used 
+The code loads 3 tabels **`daily_activity`**, **`heart_rate`**, **`weight_log`**
+
+- heart_rate: **`HeartRate`**
+- weight_log: **`WeightKg`**
+- daily_activity: **`TotalSteps`**, **`CaloriesBurned`**
+
+### Merged data
+The code will merge the tables named above on ID and will use the missing value function to remove the missing values and prevents issues. Daily_activity merges with weight_log and heart_rate on the Id field. The data does not only gets merged but the average is also computed of CaloriesBurned, TotalSteps, WeightKg, and HeartRate per individual. 
+
+### Visualizations
+To get a better idea of how the data looks, the data will be visualized to get a better idea of the correlation of the results. Therefore there are 3 interesting scatterplots coded:
+- Heart Rate vs. Total Steps: Scatter plot of heart rate and total steps.
+- Heart Rate vs. Calories Burned: Scatter plot of heart rate and calories burned.
+- Weight vs. Calories Burned: Scatter plot of weight and average calories burned.
 
 
 
 ## Authors
 Bendel Mees, Karssen Quinten, Schneider Patrick, Tensen Taeke
-
 
 
 
