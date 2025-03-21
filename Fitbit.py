@@ -10,11 +10,11 @@ import sqlite3
 import logging
 
 #Makes the code adaptable 
-FILENAME = 'daily_acivity.csv'
+FILENAME = 'daily_activity.csv'
 
 
 #Initializes the CSV file
-def load_csv(filename='daily_acivity.csv'):
+def load_csv(filename='daily_activity.csv'):
     try:
         df = pd.read_csv(filename)
         df['Id'] = df['Id'].astype(str)
@@ -170,7 +170,26 @@ db_path =  "fitbit_database.db"
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
-
+#this function classifies the users based on the frquency of their activity"
+# the function returns a dataframe where the users are either classified ass heavy, moderate or light user.
+#The dataframe has 2 cols, 1 with the id the other one with the class of activity
+def classify_users():
+    query = """ SELECT Id, COUNT(*) as activity_count FROM daily_activity GROUP BY Id"""
+    cursor.execute(query)
+    results = cursor.fetchall()
+    
+    classified_users = []
+    for row in results:
+        user_id, activity_count = row
+        if activity_count <= 10:
+            user_class = "Light user"
+        elif 11 <= activity_count <= 15:
+            user_class = "Moderate user"
+        else:
+            user_class = "Heavy user"
+        classified_users.append((user_id, user_class))
+    
+    return pd.DataFrame(classified_users, columns=["Id", "Class"])
 
 def sleep_duration():
     """Computes total sleep duration per user and visualizes it."""
@@ -192,26 +211,7 @@ def sleep_duration():
     return df
 
 
-#this function classifies the users based on the frquency of their activity"
-# the function returns a dataframe where the users are either classified ass heavy, moderate or light user.
-#The dataframe has 2 cols, 1 with the id the other one with the class of activity
-def classify_users():
-    query = """ SELECT Id, COUNT(*) as activity_count FROM daily_activity GROUP BY Id"""
-    cursor.execute(query)
-    results = cursor.fetchall()
-    
-    classified_users = []
-    for row in results:
-        user_id, activity_count = row
-        if activity_count <= 10:
-            user_class = "Light user"
-        elif 11 <= activity_count <= 15:
-            user_class = "Moderate user"
-        else:
-            user_class = "Heavy user"
-        classified_users.append((user_id, user_class))
-    
-    return pd.DataFrame(classified_users, columns=["Id", "Class"])
+
 
 #This function analyses the correleation between the sleep duration and the amount of activity
 #The function returns nothing, and displays a plot after it is executed
@@ -241,40 +241,6 @@ def sleep_vs_activity():
     plt.show()
 
 
-classified_users_df = classify_users()
-
-# Display classified users
-print("Classified Users:")
-print(classified_users_df.head())
-
-
-def heart_rate_vs_intensity(user_id):
-    """Compares heart rate with exercise intensity for a user."""
-    query = f"""
-        SELECT h.Id, h.Time, h.Value as HeartRate, i.TotalIntensity
-        FROM heart_rate h
-        JOIN hourly_intensity i ON h.Id = i.Id AND h.Time = i.ActivityHour
-        WHERE h.Id = '{user_id}'
-    """
-
-    with db_init() as conn:
-        df = pd.read_sql(query, conn)
-
-    if df.empty:
-        print("No data found for this user.")
-        return
-
-    plt.figure(figsize=(10, 5))
-    plt.plot(df["Time"], df["HeartRate"], label="Heart Rate", color="red")
-    plt.plot(df["Time"], df["TotalIntensity"], label="Exercise Intensity", color="blue")
-    plt.legend()
-    plt.xlabel("Time")
-    plt.ylabel("Heart Rate / Intensity")
-    plt.title(f"Heart Rate vs. Exercise Intensity for User {user_id}")
-    plt.xticks(rotation=45)
-    plt.show()
-
-
 def sedentary_vs_sleep():
     query = """
         SELECT d.Id, d.SedentaryMinutes, SUM(m.value) as total_sleep
@@ -298,6 +264,7 @@ def sedentary_vs_sleep():
     plt.ylabel("Total Sleep (minutes)")
     plt.title("Sedentary Activity vs. Sleep Duration")
     plt.show()
+
 
 # 4. Breaking down the day into 4-hour blocks
 def activity_by_time_blocks():
@@ -329,44 +296,54 @@ def activity_by_time_blocks():
 
 
 def steps_by_time_blocks():
+    """Breaks down steps into 4-hour time blocks and visualizes it."""
     query = "SELECT Id, ActivityHour, StepTotal FROM hourly_steps"
-    cursor.execute(query)
-    results = cursor.fetchall()
-    if not results:
-        print("No data available from hourly_steps.")
-        return
-    df_steps = pd.DataFrame(results, columns=["Id", "ActivityHour", "Steps"])
-    df_steps['ActivityHour'] = pd.to_datetime(df_steps['ActivityHour'], errors='coerce')
-    if df_steps['ActivityHour'].isna().all():
-        print("Failed to parse Time in hourly_steps.")
-        return
-    df_steps['Hour'] = df_steps['ActivityHour'].dt.hour
-    bins = [0, 4, 8, 12, 16, 20, 24]
-    labels = ['0-4', '4-8', '8-12', '12-16', '16-20', '20-24']
-    df_steps['time_block'] = pd.cut(df_steps['Hour'], bins=bins, labels=labels, include_lowest=True)
-    df_grouped = df_steps.groupby("time_block")["Steps"].mean().reset_index()
-    df_grouped.plot(kind="bar", x="time_block", y="Steps", figsize=(10, 5), title="Average Steps by 4-hour Block")
+
+    with db_init() as conn:
+        df = pd.read_sql(query, conn)
+
+    df["ActivityHour"] = pd.to_datetime(df["ActivityHour"])
+    df["Hour"] = df["ActivityHour"].dt.hour
+
+    df["TimeBlock"] = pd.cut(df["Hour"], bins=[0, 4, 8, 12, 16, 20, 24], 
+                             labels=["0-4", "4-8", "8-12", "12-16", "16-20", "20-24"], include_lowest=True)
+
+    avg_steps = df.groupby("TimeBlock")["StepTotal"].mean()
+
+    avg_steps.plot(kind="bar", figsize=(8, 5), title="Average Steps per 4-hour Block")
     plt.xlabel("Time Block")
     plt.ylabel("Average Steps")
     plt.show()
 
 
-def tempDebugInfo():
-    cursor.execute("PRAGMA table_info(hourly_steps)")
-    columns_info = cursor.fetchall()
-
-
-    print(columns_info)
-    cursor.execute("SELECT DISTINCT Id FROM heart_rate")
-    userInfo = cursor.fetchall();
-    print(userInfo)
     
+def heart_rate_vs_intensity(user_id):
+    """Compares heart rate with exercise intensity for a user."""
+    query = f"""
+        SELECT h.Id, h.Time, h.Value as HeartRate, i.TotalIntensity
+        FROM heart_rate h
+        JOIN hourly_intensity i ON h.Id = i.Id AND h.Time = i.ActivityHour
+        WHERE h.Id = '{user_id}'
+    """
 
-# TEST PART 4
+    with db_init() as conn:
+        df = pd.read_sql(query, conn)
+
+    if df.empty:
+        print("No data found for this user.")
+        return
+
+    plt.figure(figsize=(10, 5))
+    plt.plot(df["Time"], df["HeartRate"], label="Heart Rate", color="red")
+    plt.plot(df["Time"], df["TotalIntensity"], label="Exercise Intensity", color="blue")
+    plt.legend()
+    plt.xlabel("Time")
+    plt.ylabel("Heart Rate / Intensity")
+    plt.title(f"Heart Rate vs. Exercise Intensity for User {user_id}")
+    plt.xticks(rotation=45)
+    plt.show()
+
 #part 4
-import pandas as pd
-import sqlite3
-import matplotlib.pyplot as plt
 
 def fill_missing_weight_values(weight_log):
     """
@@ -468,5 +445,5 @@ if summary_heart_activity.dropna().shape[0] > 0:
 else:
     print("\nNot enough valid data to generate plots.")
 
-# Close database connection
+
 conn.close()
