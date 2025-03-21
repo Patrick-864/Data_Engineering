@@ -13,16 +13,7 @@ import logging
 FILENAME = 'daily_acivity.csv'
 
 
-###Initiliazes the connection to the data base
-def db_init(dataBase_path="fitbit_database.db"):
-    try:
-        conn = sqlite3.connect(dataBase_path)
-        return conn
-    except Exception as e:
-        print("Error connecting to database:", e)
-        raise
-
-
+#Initializes the CSV file
 def load_csv(filename='daily_acivity.csv'):
     try:
         df = pd.read_csv(filename)
@@ -33,6 +24,17 @@ def load_csv(filename='daily_acivity.csv'):
     except Exception as e:
         logging.error(f"Error loading CSV file: {e}")
         return None
+
+
+#Initiliazes the connection to the data base
+def db_init(dataBase_path="fitbit_database.db"):
+    try:
+        conn = sqlite3.connect(dataBase_path)
+        return conn
+    except Exception as e:
+        print("Error connecting to database:", e)
+        raise
+
 
 
 def printUniqueUsers(df):
@@ -168,9 +170,28 @@ db_path =  "fitbit_database.db"
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
-def sleepDuration():
-    #TODO
-    print("Hello")
+
+
+def sleep_duration():
+    """Computes total sleep duration per user and visualizes it."""
+    query = "SELECT Id, SUM(value) as total_sleep FROM minute_sleep GROUP BY Id"
+
+    with db_init() as conn:
+        df = pd.read_sql(query, conn)
+
+    df["Id"] = df["Id"].astype(str)
+
+    # Plot sleep duration per user
+    plt.figure(figsize=(10, 5))
+    sns.histplot(df["total_sleep"], bins=20, kde=True)
+    plt.xlabel("Total Sleep Duration (minutes)")
+    plt.ylabel("Frequency")
+    plt.title("Distribution of Total Sleep Duration")
+    plt.show()
+
+    return df
+
+
 #this function classifies the users based on the frquency of their activity"
 # the function returns a dataframe where the users are either classified ass heavy, moderate or light user.
 #The dataframe has 2 cols, 1 with the id the other one with the class of activity
@@ -227,9 +248,31 @@ print("Classified Users:")
 print(classified_users_df.head())
 
 
-def heartRate(id):
-    #TODO
-    print("Hello")
+def heart_rate_vs_intensity(user_id):
+    """Compares heart rate with exercise intensity for a user."""
+    query = f"""
+        SELECT h.Id, h.Time, h.Value as HeartRate, i.TotalIntensity
+        FROM heart_rate h
+        JOIN hourly_intensity i ON h.Id = i.Id AND h.Time = i.ActivityHour
+        WHERE h.Id = '{user_id}'
+    """
+
+    with db_init() as conn:
+        df = pd.read_sql(query, conn)
+
+    if df.empty:
+        print("No data found for this user.")
+        return
+
+    plt.figure(figsize=(10, 5))
+    plt.plot(df["Time"], df["HeartRate"], label="Heart Rate", color="red")
+    plt.plot(df["Time"], df["TotalIntensity"], label="Exercise Intensity", color="blue")
+    plt.legend()
+    plt.xlabel("Time")
+    plt.ylabel("Heart Rate / Intensity")
+    plt.title(f"Heart Rate vs. Exercise Intensity for User {user_id}")
+    plt.xticks(rotation=45)
+    plt.show()
 
 
 def sedentary_vs_sleep():
