@@ -8,6 +8,7 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import sqlite3
 import logging
+import streamlit as st
 
 #Makes the code adaptable 
 FILENAME = 'daily_activity.csv'
@@ -43,11 +44,13 @@ def printUniqueUsers(df):
 
 
 def totalDistance(df):
-  total_distance_per_user = df.groupby('Id')['TotalDistance'].sum()
-  total_distance_per_user.plot(kind='bar', figsize=(10,5), title='Total Distance per User')
-  plt.xlabel('User Id')
-  plt.ylabel('Total Distance')
-  plt.show()
+    total_distance_per_user = df.groupby('Id')['TotalDistance'].sum()
+    plt.figure(figsize=(10,5))
+    plt.bar(total_distance_per_user.index, total_distance_per_user.values)
+    plt.xlabel('User Id')
+    plt.ylabel('Total Distance')
+    plt.title('Total Distance per User')
+    st.pyplot(plt.gcf())  # Use Streamlit to display the plot
 
 # Function to display calories burnt over a certain date range for a specific user
 def plot_calories_burnt(df, user_id, start_date=None, end_date=None):
@@ -76,7 +79,7 @@ def plot_calories_burnt(df, user_id, start_date=None, end_date=None):
     plt.ylabel('Calories Burnt')
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.show()
+    st.pyplot(plt.gcf())
 
 
 def workoutPerDay(df): 
@@ -88,7 +91,7 @@ def workoutPerDay(df):
   plt.title('Workout Frequency by Weekday')
   plt.xlabel('Day of Week')
   plt.ylabel('Count')
-  plt.show()
+  st.pyplot(plt.gcf())
   
 
 #Calories burnt vs. Total Steps
@@ -143,7 +146,7 @@ def plot_regression(df, user_id):
     plt.ylabel('Calories')
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    st.pyplot(plt.gcf())
     
     # Print interpretation
     beta_1 = model.params['TotalSteps']
@@ -238,7 +241,7 @@ def sleep_vs_activity():
     plt.xlabel("Total Active Minutes")
     plt.ylabel("Total Sleep (minutes)")
     plt.title("Sleep Duration vs. Active Minutes")
-    plt.show()
+    st.pyplot(plt.gcf())
 
 
 def sedentary_vs_sleep():
@@ -263,7 +266,7 @@ def sedentary_vs_sleep():
     plt.xlabel("Sedentary Minutes")
     plt.ylabel("Total Sleep (minutes)")
     plt.title("Sedentary Activity vs. Sleep Duration")
-    plt.show()
+    st.pyplot(plt.gcf())
 
 
 # 4. Breaking down the day into 4-hour blocks
@@ -292,7 +295,7 @@ def activity_by_time_blocks():
     plt.title("Calories Burned Breakdown by Time Block")
     plt.xlabel("Time Block")
     plt.ylabel("Total Calories")
-    plt.show()
+    st.pyplot(plt.gcf())
 
 
 def steps_by_time_blocks():
@@ -313,7 +316,7 @@ def steps_by_time_blocks():
     avg_steps.plot(kind="bar", figsize=(8, 5), title="Average Steps per 4-hour Block")
     plt.xlabel("Time Block")
     plt.ylabel("Average Steps")
-    plt.show()
+    st.pyplot(plt.gcf())
 
 
     
@@ -422,7 +425,7 @@ if summary_weight_activity.dropna().shape[0] > 0:
     plt.ylabel('Average Calories Burned')
     plt.title('Weight vs. Calories Burned per Individual')
     plt.grid()
-    plt.show()
+    st.pyplot(plt.gcf())
 
 if summary_heart_activity.dropna().shape[0] > 0:
     # Visualization: Heart Rate vs. Total Steps
@@ -432,7 +435,7 @@ if summary_heart_activity.dropna().shape[0] > 0:
     plt.ylabel('Total Steps')
     plt.title('Heart Rate vs. Total Steps per Individual')
     plt.grid()
-    plt.show()
+    st.pyplot(plt.gcf())
 
     # Visualization: Heart Rate vs. Calories Burned
     plt.figure(figsize=(10, 6))
@@ -441,7 +444,7 @@ if summary_heart_activity.dropna().shape[0] > 0:
     plt.ylabel('Average Calories Burned')
     plt.title('Heart Rate vs. Calories Burned per Individual')
     plt.grid()
-    plt.show()
+    st.pyplot(plt.gcf())
 else:
     print("\nNot enough valid data to generate plots.")
 
