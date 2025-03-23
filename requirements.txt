@@ -4,5 +4,4 @@ seaborn
 numpy
 datetime
 statsmodels
-sqlite3
 logging
