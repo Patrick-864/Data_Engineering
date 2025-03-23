@@ -158,18 +158,6 @@ def plot_regression(df, user_id):
 
 
 
-def run_first_part(df,id):
-  printUniqueUsers(df)
-  totalDistance(df)
-  plot_calories_burnt(df,user_id=id, start_date='4/3/2016', end_date='4/4/2016')
-  workoutPerDay(df)
-  linear_regression_for_user(df,id)
-  plot_regression(df,id)
-
-
-if __name__ == "__main__":
-  df = load_csv()
-  run_first_part(df,1624580081)
 
 
 
@@ -352,10 +340,6 @@ def weather_vs_activity(weather_df, activity_df):
 
 
 #part 4
-import pandas as pd
-import sqlite3
-import matplotlib.pyplot as plt
-
 def fill_missing_weight_values(weight_log):
     
     print("\nOriginal missing values in weight_log:")
@@ -464,14 +448,6 @@ else:
     print("\nNot enough valid data to generate plots.")
     
 
-# Close database connection
-conn.close()
-
-
-
-import pandas as pd
-import sqlite3
-import matplotlib.pyplot as plt
 
 # Connect to the Fitbit database
 db_path = 'fitbit_database.db'  # Update this path if necessary
