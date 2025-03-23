@@ -322,6 +322,7 @@ def heart_rate_vs_intensity(user_id, conn):
     plt.plot(df["Time"], df["HeartRate"], label="Heart Rate", color="red")
     plt.plot(df["Time"], df["TotalIntensity"], label="Exercise Intensity", color="blue")
     plt.legend()
+    plt.xticks([])  # This line removes the x-axis labels
     plt.xlabel("Time")
     plt.ylabel("Heart Rate / Intensity")
     plt.title(f"Heart Rate vs. Exercise Intensity for User {user_id}")
