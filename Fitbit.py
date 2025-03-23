@@ -570,13 +570,56 @@ def get_summary_stats(user_data):
         w = user_data['weight'].sort_values('Date')
         stats['Average Weight'] = w['WeightKg'].mean()
 
-    if not user_data['weight'].empty:
-        stats['Average Weight'] = user_data['weight']['WeightKg'].mean()
+    
+        # Sleep duration
+    if not user_data['minute_sleep'].empty:
+        sleep = user_data['minute_sleep'].copy()
+        sleep['date'] = pd.to_datetime(sleep['date']).dt.date
+        daily_sleep = sleep.groupby('date')['value'].sum() / 60  # minutes to hours
+        stats['Avg Sleep Duration (hrs)'] = daily_sleep.mean()
+        stats['Max Sleep Duration (hrs)'] = daily_sleep.max()
+        stats['Sleep Duration Std Dev'] = daily_sleep.std()
+
+        # Plot: Sleep duration over time
+        plt.figure(figsize=(10, 4))
+        daily_sleep.sort_index().plot(marker='o', linestyle='-', color='purple')
+        plt.title('Sleep Duration Over Time')
+        plt.xlabel('Date')
+        plt.ylabel('Sleep Duration (hours)')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
+        # Compare sleep and daily steps
+        if not user_data['daily_activity'].empty:
+            daily_activity = user_data['daily_activity'].copy()
+            daily_activity['date'] = daily_activity['ActivityDate'].dt.date
+            merged = pd.merge(daily_activity, daily_sleep.rename('SleepDuration'), left_on='date', right_index=True, how='inner')
+
+            # Dual-axis plot: Steps and Sleep Duration
+            fig, ax1 = plt.subplots(figsize=(10, 5))
+
+            ax1.set_xlabel('Date')
+            ax1.set_ylabel('Total Steps', color='blue')
+            ax1.plot(merged['date'], merged['TotalSteps'], color='blue', label='Steps')
+            ax1.tick_params(axis='y', labelcolor='blue')
+
+            ax2 = ax1.twinx()
+            ax2.set_ylabel('Sleep Duration (hrs)', color='purple')
+            ax2.plot(merged['date'], merged['SleepDuration'], color='purple', label='Sleep Duration')
+            ax2.tick_params(axis='y', labelcolor='purple')
+
+            plt.title('Daily Steps and Sleep Duration Over Time')
+            fig.tight_layout()
+            plt.grid(True)
+            plt.show()
+
+   
 
     return stats
 
 # Example usage
-user_id = '2026352035.0 '
+user_id = '1503960366.0 '
 start_date = '2016-03-13'
 end_date = '2016-04-13'
 time_of_day = (6, 22)
@@ -592,5 +635,3 @@ print(individual_data['heart_rate'].head())
 
 # Close connection
 conn.close()
-
-
