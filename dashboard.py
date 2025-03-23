@@ -9,7 +9,7 @@ def load_data():
     return load_csv('daily_activity.csv')
 
 df = load_data()
-
+weather_df = pd.read_csv("weather_chicago.csv")
 conn = db_init()
 
 if df is None or df.empty:
@@ -26,7 +26,8 @@ tabs = st.sidebar.radio("Navigation", [
     "General Statistics",
     "Individual Overview",
     "Time-based Analysis",
-    "Sleep Analysis"
+    "Sleep Analysis",
+    "Weather"
 ])
 
 if tabs == "General Statistics":
@@ -49,14 +50,8 @@ elif tabs =="Individual Overview":
     else:
         st.error("No data available for the selected user.")
 
+elif tabs == "Weather":
+    st.header("Weather vs Activity")
+    weather_vs_activity(weather_df, df)
 
 
-
-
-
-
-
-
-# Add a button to clear the cache in the sidebar or main page
-if st.button('Clear Cache'):
-    st.caching.clear_cache()

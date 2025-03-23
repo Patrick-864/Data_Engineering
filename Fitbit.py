@@ -339,6 +339,18 @@ def heart_rate_vs_intensity(user_id, conn):
     plt.xticks(rotation=45)
 
 
+def weather_vs_activity(weather_df, activity_df):
+    activity_df['ActivityDate'] = pd.to_datetime(activity_df['ActivityDate'], errors='coerce')
+    weather_df['date'] = pd.to_datetime(weather_df['date'], errors='coerce')
+    merged = pd.merge(activity_df, weather_df, left_on='ActivityDate', right_on='date')
+    fig, axs = plt.subplots(1, 2, figsize=(14, 5))
+    sns.scatterplot(data=merged, x='temp', y='TotalSteps', ax=axs[0])
+    axs[0].set_title('Steps vs Temperature')
+    sns.scatterplot(data=merged, x='precip', y='Calories', ax=axs[1])
+    axs[1].set_title('Calories vs Precipitation')
+    st.pyplot(fig)
+
+
 #part 4
 
 def fill_missing_weight_values(weight_log):
