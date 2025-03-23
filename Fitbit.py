@@ -577,8 +577,7 @@ def get_summary_stats(user_data):
         sleep['date'] = pd.to_datetime(sleep['date']).dt.date
         daily_sleep = sleep.groupby('date')['value'].sum() / 60  # minutes to hours
         stats['Avg Sleep Duration (hrs)'] = daily_sleep.mean()
-        stats['Max Sleep Duration (hrs)'] = daily_sleep.max()
-        stats['Sleep Duration Std Dev'] = daily_sleep.std()
+        
 
         # Plot: Sleep duration over time
         plt.figure(figsize=(10, 4))
