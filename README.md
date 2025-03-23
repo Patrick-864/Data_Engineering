@@ -174,7 +174,64 @@ To get a better idea of how the data looks, the data will be visualized to get a
 - Weight vs. Calories Burned: Scatter plot of weight and average calories burned.
 
 
+# Dashboard
 
+This project is a **Streamlit-based dashboard** for visualizing and analyzing Fitbit activity data. It includes insights into users' general fitness trends, individual statistics, sleep analysis, and correlations with weather conditions in Chicago.
+
+## Features
+
+- **General Statistics**: View overall trends in user activity.
+- **Individual Overview**: Dive deep into a selected user's data with regression plots and heart rate vs intensity charts.
+- **Time-based Analysis**: See how activity varies over different time blocks.
+- **Sleep Analysis**: Understand how sleep relates to activity and sedentary time.
+- **Weather Comparison**: Analyze the effect of weather on physical activity.
+
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.8+
+- Required Python packages:
+  ```bash
+  pip install streamlit pandas matplotlib seaborn scikit-learn
+  ```
+
+### Run the Dashboard
+
+```bash
+streamlit run dashboard.py
+```
+
+
+
+## Dashboard Tabs Overview
+
+The sidebar navigation allows users to switch between different analytical views:
+
+### General Statistics
+- Displays total distance by user (graphical summary).
+- Numerical summary of activity data (excluding date).
+- Unique user count and average workouts per day.
+- User class distribution via plots.
+
+###  Individual Overview
+- Select a specific user and view their activity summary.
+- Visualizations for calories burned, regression analysis, and heart rate vs. intensity.
+- Useful for personalized insights and fitness tracking over time.
+
+### Time-based Analysis
+- Explore how activity levels change across different time blocks (e.g., morning vs evening).
+- Includes detailed breakdowns of step counts and activity intensity by time of day.
+
+### Sleep Analysis
+- Visualizes relationships between sleep duration and daily activity.
+- Compares sedentary time to sleep metrics.
+- Highlights the importance of rest in overall fitness.
+
+### Weather
+- Compares weather data with user activity.
+- Helps identify how temperature, precipitation, and other weather factors influence behavior.
 ## Authors
 Bendel Mees, Karssen Quinten, Schneider Patrick, Tensen Taeke
 
