@@ -53,8 +53,12 @@ elif tabs =="Individual Overview":
         linear_regression_for_user(df, selected_user)
         plot_regression(df, selected_user)
         heart_rate_vs_intensity(selected_user,conn)
+        dfs = get_user_dataframes(conn)
+        user_data = get_individual_data(user_id, dfs, start_date, end_date)
+        stats = get_summary_stats(user_data)
+        st.write(stats)
     else:
-        st.error("No data available for the selected user.")
+        st.error("Heart rate data available.")
 
 elif tabs == "Time-based Analysis":
     st.header("Time-based Activity Analysis")

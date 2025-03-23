@@ -28,7 +28,6 @@ def load_csv(filename='daily_activity.csv'):
         return None
 
 
-
 #Initiliazes the connection to the data base
 def db_init(dataBase_path="fitbit_database.db"):
     try:
@@ -87,21 +86,30 @@ def plot_calories_burnt(df, user_id, start_date=None, end_date=None):
 
 def workoutPerDay(df): 
   # Convert date and plot frequency of workouts per weekday
-  df['ActivityDate'] = pd.to_datetime(df['ActivityDate'])
-  df['Weekday'] = df['ActivityDate'].dt.day_name()
-  sns.countplot(x='Weekday', data=df, order=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
-  plt.xticks(rotation=45)
-  plt.title('Workout Frequency by Weekday')
-  plt.xlabel('Day of Week')
-  plt.ylabel('Count')
-  st.pyplot(plt.gcf())
+    df['ActivityDate'] = pd.to_datetime(df['ActivityDate'])
+
+    # Count number of users who worked out each day
+    users_per_day = df.groupby('ActivityDate')['Id'].nunique().reset_index()
+    users_per_day['Weekday'] = users_per_day['ActivityDate'].dt.day_name()
+    weekday_avg = users_per_day.groupby('Weekday')['Id'].mean().reindex([
+        'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+    ])
+
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x=weekday_avg.index, y=weekday_avg.values, palette='coolwarm')
+    plt.title('Average Number of Users Active per Weekday')
+    plt.xlabel('Weekday')
+    plt.ylabel('Average Number of Users')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    st.pyplot(plt.gcf())
   
 
 #Calories burnt vs. Total Steps
-  """
-  Fit a linear regression model: Calories = Beta_0 + Beta_1 * TotalSteps
-  for the given user, and print the model summary plus an interpretation of Beta_1.
-  """
+"""
+Fit a linear regression model: Calories = Beta_0 + Beta_1 * TotalSteps
+for the given user, and print the model summary plus an interpretation of Beta_1.
+"""
 def linear_regression_for_user(df,user_id):
 
     user_id = str(user_id)
@@ -378,132 +386,50 @@ def fill_missing_weight_values(weight_log):
 
 
 # Load only necessary columns from tables
-daily_activity = pd.read_sql("SELECT Id, Calories AS CaloriesBurned, TotalSteps FROM daily_activity", conn)
-heart_rate = pd.read_sql("SELECT Id, Value AS HeartRate FROM heart_rate", conn)
-weight_log = pd.read_sql("SELECT Id, WeightKg FROM weight_log", conn)
-hourly_intensity = pd.read_sql("SELECT * FROM hourly_intensity", conn)
-hourly_steps = pd.read_sql("SELECT * FROM hourly_steps", conn)
-minute_sleep = pd.read_sql("SELECT * FROM minute_sleep", conn)
-print("\nOriginal Hourly Intensity Data:")
-print(hourly_intensity.head())
+def get_user_dataframes(conn):
+    daily_activity = pd.read_sql("SELECT * FROM daily_activity", conn)
+    heart_rate = pd.read_sql("SELECT * FROM heart_rate", conn)
+    weight_log = pd.read_sql("SELECT * FROM weight_log", conn)
+    hourly_calories = pd.read_sql("SELECT * FROM hourly_calories", conn)
+    hourly_steps = pd.read_sql("SELECT * FROM hourly_steps", conn)
+    minute_sleep = pd.read_sql("SELECT * FROM minute_sleep", conn)
 
-print("\nOriginal Hourly Steps Data:")
-print(hourly_steps.head())
+    daily_activity.rename(columns={'Calories': 'CaloriesBurned'}, inplace=True)
+    heart_rate.rename(columns={'Value': 'HeartRate'}, inplace=True)
 
-print("\nOriginal Minute Sleep Data:")
-print(minute_sleep.head())
+    for df in [daily_activity, heart_rate, weight_log, hourly_calories, hourly_steps, minute_sleep]:
+        df['Id'] = df['Id'].astype(float).astype(int).astype(str)
 
-# Convert Id to a common type (string) to avoid mismatches
-daily_activity['Id'] = daily_activity['Id'].astype(str).str.strip()
-heart_rate['Id'] = heart_rate['Id'].astype(str).str.strip()
-weight_log['Id'] = weight_log['Id'].astype(str).str.strip()
+    weight_log['Date'] = pd.to_datetime(weight_log['Date'], errors='coerce')
+    daily_activity['ActivityDate'] = pd.to_datetime(daily_activity['ActivityDate'], errors='coerce')
+    heart_rate['Time'] = pd.to_datetime(heart_rate['Time'], errors='coerce')
+    hourly_calories['ActivityHour'] = pd.to_datetime(hourly_calories['ActivityHour'], errors='coerce')
+    hourly_steps['ActivityHour'] = pd.to_datetime(hourly_steps['ActivityHour'], errors='coerce')
+    minute_sleep['date'] = pd.to_datetime(minute_sleep['date'], errors='coerce')
 
-# Fill missing values in WeightKg
-weight_log = fill_missing_weight_values(weight_log)
+    return {
+        "daily_activity": daily_activity,
+        "heart_rate": heart_rate,
+        "weight_log": weight_log,
+        "hourly_calories": hourly_calories,
+        "hourly_steps": hourly_steps,
+        "minute_sleep": minute_sleep
+    }
 
-# Create two separate merged DataFrames
-merged_weight_activity = daily_activity.merge(weight_log, on='Id', how='inner')
-merged_heart_activity = daily_activity.merge(heart_rate, on='Id', how='inner')
-
-# Print table heads to inspect the data
-print("\nHead of merged_weight_activity:")
-print(merged_weight_activity.head())
-print("\nHead of merged_heart_activity:")
-print(merged_heart_activity.head())
-
-# Compute summary statistics per individual
-summary_weight_activity = merged_weight_activity.groupby('Id').agg({
-    'CaloriesBurned': 'mean',
-    'TotalSteps': 'mean',
-    'WeightKg': 'mean'
-})
-
-summary_heart_activity = merged_heart_activity.groupby('Id').agg({
-    'CaloriesBurned': 'mean',
-    'TotalSteps': 'mean',
-    'HeartRate': 'mean'
-})
-
-print("\nSummary Statistics for Weight and Activity:")
-print(summary_weight_activity.head())
-print("\nSummary Statistics for Heart Rate and Activity:")
-print(summary_heart_activity.head())
-
-# Ensure there is data for visualization
-if summary_weight_activity.dropna().shape[0] > 0:
-    # Visualization: Weight vs. Calories Burned
-    plt.figure(figsize=(10, 6))
-    plt.scatter(summary_weight_activity['WeightKg'], summary_weight_activity['CaloriesBurned'], alpha=0.7, color='green')
-    plt.xlabel('Weight (Kg)')
-    plt.ylabel('Average Calories Burned')
-    plt.title('Weight vs. Calories Burned per Individual')
-    plt.grid()
-    st.pyplot(plt.gcf())
-
-if summary_heart_activity.dropna().shape[0] > 0:
-    # Visualization: Heart Rate vs. Total Steps
-    plt.figure(figsize=(10, 6))
-    plt.scatter(summary_heart_activity['HeartRate'], summary_heart_activity['TotalSteps'], alpha=0.7, color='blue')
-    plt.xlabel('Heart Rate')
-    plt.ylabel('Total Steps')
-    plt.title('Heart Rate vs. Total Steps per Individual')
-    plt.grid()
-    st.pyplot(plt.gcf())
-
-    # Visualization: Heart Rate vs. Calories Burned
-    plt.figure(figsize=(10, 6))
-    plt.scatter(summary_heart_activity['HeartRate'], summary_heart_activity['CaloriesBurned'], alpha=0.7, color='red')
-    plt.xlabel('Heart Rate')
-    plt.ylabel('Average Calories Burned')
-    plt.title('Heart Rate vs. Calories Burned per Individual')
-    plt.grid()
-    st.pyplot(plt.gcf())
-else:
-    print("\nNot enough valid data to generate plots.")
-    
-
-
-# Connect to the Fitbit database
-db_path = 'fitbit_database.db'  # Update this path if necessary
-conn = sqlite3.connect(db_path)
-
-# Load relevant tables
-daily_activity = pd.read_sql("SELECT * FROM daily_activity", conn)
-daily_activity.rename(columns={'Calories': 'CaloriesBurned'}, inplace=True) 
-heart_rate = pd.read_sql("SELECT * FROM heart_rate", conn)
-
-heart_rate.rename(columns={'Value': 'HeartRate'}, inplace=True)
-weight_log = pd.read_sql("SELECT * FROM weight_log", conn)
-hourly_calories = pd.read_sql("SELECT * FROM hourly_calories", conn)
-hourly_steps = pd.read_sql("SELECT * FROM hourly_steps", conn)
-minute_sleep = pd.read_sql("SELECT * FROM minute_sleep", conn)  
-
-# Normalize all Ids (fix float formatting and ensure consistency)
-for df in [daily_activity, heart_rate, weight_log, hourly_calories, hourly_steps, minute_sleep]:
-    df['Id'] = df['Id'].astype(float).astype(int).astype(str)
-
-# Convert date/time columns
-weight_log['Date'] = pd.to_datetime(weight_log['Date'], errors='coerce')
-daily_activity['ActivityDate'] = pd.to_datetime(daily_activity['ActivityDate'], errors='coerce')
-heart_rate['Time'] = pd.to_datetime(heart_rate['Time'], errors='coerce')
-hourly_calories['ActivityHour'] = pd.to_datetime(hourly_calories['ActivityHour'], errors='coerce')
-hourly_steps['ActivityHour'] = pd.to_datetime(hourly_steps['ActivityHour'], errors='coerce')
-minute_sleep['date'] = pd.to_datetime(minute_sleep['date'], errors='coerce')
-
-# Individual data function
-def get_individual_data(user_id, start_date=None, end_date=None, time_of_day=None):
+def get_individual_data(user_id, dfs, start_date=None, end_date=None, time_of_day=None):
     user_id = str(int(float(user_id))).strip()
 
-    # Filter by ID
-    weight_data = weight_log[weight_log['Id'] == user_id]
-    daily_data = daily_activity[daily_activity['Id'] == user_id]
-    heart_data = heart_rate[heart_rate['Id'] == user_id]
-    hourly_cals = hourly_calories[hourly_calories['Id'] == user_id]
-    hourly_steps_data = hourly_steps[hourly_steps['Id'] == user_id]
-    sleep_data = minute_sleep[minute_sleep['Id'] == user_id]
+    weight_data = dfs['weight_log'][dfs['weight_log']['Id'] == user_id]
+    daily_data = dfs['daily_activity'][dfs['daily_activity']['Id'] == user_id]
+    heart_data = dfs['heart_rate'][dfs['heart_rate']['Id'] == user_id]
+    hourly_cals = dfs['hourly_calories'][dfs['hourly_calories']['Id'] == user_id]
+    hourly_steps_data = dfs['hourly_steps'][dfs['hourly_steps']['Id'] == user_id]
+    sleep_data = dfs['minute_sleep'][dfs['minute_sleep']['Id'] == user_id]
 
-    # Date filters
     if start_date and end_date:
+        start_date = pd.to_datetime(start_date)
+        end_date = pd.to_datetime(end_date)
+
         weight_data = weight_data[(weight_data['Date'] >= start_date) & (weight_data['Date'] <= end_date)]
         daily_data = daily_data[(daily_data['ActivityDate'] >= start_date) & (daily_data['ActivityDate'] <= end_date)]
         heart_data = heart_data[(heart_data['Time'] >= start_date) & (heart_data['Time'] <= end_date)]
@@ -511,7 +437,6 @@ def get_individual_data(user_id, start_date=None, end_date=None, time_of_day=Non
         hourly_steps_data = hourly_steps_data[(hourly_steps_data['ActivityHour'] >= start_date) & (hourly_steps_data['ActivityHour'] <= end_date)]
         sleep_data = sleep_data[(sleep_data['date'] >= start_date) & (sleep_data['date'] <= end_date)]
 
-    # Time-of-day filter
     if time_of_day:
         heart_data = heart_data[heart_data['Time'].dt.hour.between(time_of_day[0], time_of_day[1])]
         hourly_cals = hourly_cals[hourly_cals['ActivityHour'].dt.hour.between(time_of_day[0], time_of_day[1])]
@@ -526,14 +451,12 @@ def get_individual_data(user_id, start_date=None, end_date=None, time_of_day=Non
         "minute_sleep": sleep_data
     }
 
-#  Summary function
+
 def get_summary_stats(user_data):
     stats = {}
-
     if not user_data['daily_activity'].empty:
         stats['Total Steps'] = user_data['daily_activity']['TotalSteps'].sum()
         stats['Total Calories Burned'] = user_data['daily_activity']['CaloriesBurned'].sum()
-                # Plot: Steps over time
         plt.figure(figsize=(10, 4))
         user_data['daily_activity'].sort_values('ActivityDate').set_index('ActivityDate')['TotalSteps'].plot()
         plt.title('Steps Over Time')
@@ -543,11 +466,8 @@ def get_summary_stats(user_data):
         plt.tight_layout()
         st.pyplot(plt.gcf())
 
-
     if not user_data['heart_rate'].empty:
         stats['Average Heart Rate'] = user_data['heart_rate']['HeartRate'].mean()
-        # Plot: Heart rate distribution
-       # Plot: Heart rate distribution
         plt.figure(figsize=(8, 4))
         user_data['heart_rate']['HeartRate'].plot.hist(bins=30, alpha=0.7)
         plt.title('Heart Rate Distribution')
@@ -555,21 +475,17 @@ def get_summary_stats(user_data):
         plt.grid(True)
         plt.tight_layout()
         st.pyplot(plt.gcf())
-         
+
     if not user_data['weight'].empty:
         w = user_data['weight'].sort_values('Date')
         stats['Average Weight'] = w['WeightKg'].mean()
 
-    
-        # Sleep duration
     if not user_data['minute_sleep'].empty:
         sleep = user_data['minute_sleep'].copy()
         sleep['date'] = pd.to_datetime(sleep['date']).dt.date
-        daily_sleep = sleep.groupby('date')['value'].sum() / 60  # minutes to hours
+        daily_sleep = sleep.groupby('date')['value'].sum() / 60
         stats['Avg Sleep Duration (hrs)'] = daily_sleep.mean()
-        
 
-        # Plot: Sleep duration over time
         plt.figure(figsize=(10, 4))
         daily_sleep.sort_index().plot(marker='o', linestyle='-', color='purple')
         plt.title('Sleep Duration Over Time')
@@ -579,15 +495,12 @@ def get_summary_stats(user_data):
         plt.tight_layout()
         st.pyplot(plt.gcf())
 
-        # Compare sleep and daily steps
         if not user_data['daily_activity'].empty:
             daily_activity = user_data['daily_activity'].copy()
             daily_activity['date'] = daily_activity['ActivityDate'].dt.date
             merged = pd.merge(daily_activity, daily_sleep.rename('SleepDuration'), left_on='date', right_index=True, how='inner')
 
-            # Dual-axis plot: Steps and Sleep Duration
             fig, ax1 = plt.subplots(figsize=(10, 5))
-
             ax1.set_xlabel('Date')
             ax1.set_ylabel('Total Steps', color='blue')
             ax1.plot(merged['date'], merged['TotalSteps'], color='blue', label='Steps')
@@ -601,26 +514,8 @@ def get_summary_stats(user_data):
             plt.title('Daily Steps and Sleep Duration Over Time')
             fig.tight_layout()
             plt.grid(True)
-            st.pyplot(plt.gcf())
-
-   
+            st.pyplot(fig)
 
     return stats
 
-# Example usage
-user_id = '1503960366.0 '
-start_date = '2016-03-13'
-end_date = '2016-04-13'
-time_of_day = (6, 22)
-
-individual_data = get_individual_data(user_id, start_date, end_date, time_of_day)
-summary_stats = get_summary_stats(individual_data)
-
-print("\n Summary Statistics:")
-print(summary_stats)
-
-print("\n Preview of Heart Rate Data:")
-print(individual_data['heart_rate'].head())
-
-# Close connection
 conn.close()
