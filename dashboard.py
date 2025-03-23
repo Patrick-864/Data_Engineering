@@ -10,6 +10,8 @@ def load_data():
 
 df = load_data()
 
+conn = db_init()
+
 if df is None or df.empty:
     st.error("Failed to load data. Please check the data file and path.")
 else:
@@ -36,8 +38,10 @@ if tabs == "General Statistics":
         st.write(df.describe())  # Provides a numerical summary of the dataset
         printUniqueUsers(df)
         workoutPerDay(df)
+        plot_user_class_distribution(conn)
 elif tabs =="Individual Overview":
-    user_data = df[df['Id'] == user_id]
+    user_data = df[df['Id'] == user_id].copy()
+
     if not user_data.empty:
         st.subheader(f'Statistics for User {user_id}')
         st.write(user_data.describe())
