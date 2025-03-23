@@ -1,5 +1,5 @@
 import streamlit as st
-#from Fitbit import load_csv, totalDistance, plot_calories_burnt, workoutPerDay, plot_regression, sleep_vs_activity
+
 from Fitbit import *
 from datetime import datetime
 

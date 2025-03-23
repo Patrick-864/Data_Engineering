@@ -332,13 +332,24 @@ def weather_vs_activity(weather_df, activity_df):
     activity_df['ActivityDate'] = pd.to_datetime(activity_df['ActivityDate'], errors='coerce')
     weather_df['date'] = pd.to_datetime(weather_df['date'], errors='coerce')
     merged = pd.merge(activity_df, weather_df, left_on='ActivityDate', right_on='date')
-    fig, axs = plt.subplots(1, 2, figsize=(14, 5))
-    sns.scatterplot(data=merged, x='temp', y='TotalSteps', ax=axs[0])
-    axs[0].set_title('Steps vs Temperature')
-    sns.scatterplot(data=merged, x='precip', y='Calories', ax=axs[1])
-    axs[1].set_title('Calories vs Precipitation')
+
+    fig, axs = plt.subplots(2, 1, figsize=(12, 10))
+
+    sns.regplot(data=merged, x='temp', y='TotalSteps', ax=axs[0], scatter_kws={'alpha':0.5}, line_kws={'color': 'red'})
+    axs[0].set_title('Effect of Temperature on Steps')
+    axs[0].set_xlabel('Temperature (°C)')
+    axs[0].set_ylabel('Total Steps')
+    axs[0].grid(True)
+
+    sns.regplot(data=merged, x='precip', y='Calories', ax=axs[1], scatter_kws={'alpha':0.5}, line_kws={'color': 'green'})
+    axs[1].set_title('Effect of Precipitation on Calories Burned')
+    axs[1].set_xlabel('Precipitation (mm)')
+    axs[1].set_ylabel('Calories Burned')
+    axs[1].grid(True)
+
+    plt.tight_layout()
     st.pyplot(fig)
-    st.pyplot(plt.gcf())
+
 
 #part 4
 def fill_missing_weight_values(weight_log):
