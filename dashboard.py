@@ -35,7 +35,8 @@ if tabs == "General Statistics":
         st.write("Graphical Summary:")
         totalDistance(df)  # Assuming this is a graphical summary of total distance per user
         st.write("Numerical Summary:")
-        st.write(df.describe())  # Provides a numerical summary of the dataset
+        #st.write(df.describe())  # Provides a numerical summary of the dataset
+        st.write(df.drop(columns=['ActivityDate']).describe())
         printUniqueUsers(df)
         workoutPerDay(df)
         plot_user_class_distribution(conn)
@@ -44,7 +45,7 @@ elif tabs =="Individual Overview":
 
     if not user_data.empty:
         st.subheader(f'Statistics for User {user_id}')
-        st.write(user_data.describe())
+        st.write(user_data.drop(columns=['ActivityDate']).describe())
     else:
         st.error("No data available for the selected user.")
 
@@ -54,24 +55,7 @@ elif tabs =="Individual Overview":
 
 
 
-# # User-specific statistics
-# st.sidebar.header("User-specific Statistics")
-# if st.sidebar.button('Show User Statistics'):
-#     user_data = df[df['Id'] == user_id]
-#     if not user_data.empty:
-#         st.subheader(f'Statistics for User {user_id}')
-#         st.write(user_data.describe())
-#     else:
-#         st.error("No data available for the selected user.")
 
-# # Interactive plots and analysis
-# st.header('Calories Burned Over Time')
-# if start_date and end_date:
-#     plot_calories_burnt(df, user_id, start_date, end_date)
-
-# Analysis of sleep durations, could not get this one working for now
-# st.header('Analysis of Sleep Durations')
-# sleep_vs_activity(df)  
 
 # Add a button to clear the cache in the sidebar or main page
 if st.button('Clear Cache'):
