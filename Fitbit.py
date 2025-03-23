@@ -45,7 +45,7 @@ def printUniqueUsers(df):
   unique_users = df['Id'].nunique()
   print(f"Number of unique users: {unique_users}")
 
-
+conn = db_init()
 def totalDistance(df):
     total_distance_per_user = df.groupby('Id')['TotalDistance'].sum()
     plt.figure(figsize=(10,5))
@@ -212,7 +212,7 @@ def sleep_duration(conn):
     plt.ylabel("Frequency")
     plt.title("Distribution of Total Sleep Duration")
     plt.show()
-
+    st.pyplot(plt.gcf())
     return df
 
 
@@ -241,7 +241,7 @@ def sleep_vs_activity(conn):
     plt.xlabel("Total Active Minutes")
     plt.ylabel("Total Sleep (minutes)")
     plt.title("Sleep Duration vs. Active Minutes")
-
+    st.pyplot(plt.gcf())
 
 
 def sedentary_vs_sleep(conn):
@@ -257,13 +257,14 @@ def sedentary_vs_sleep(conn):
         st.warning("No data available for sedentary vs. sleep analysis.")
         return
 
-    model = smf.ols("total_sleep ~ SedentaryMinutes", data=df).fit()
-    st.text(model.summary())
+    # model = smf.ols("total_sleep ~ SedentaryMinutes", data=df).fit()
+    # st.text(model.summary())
 
     sns.regplot(x=df["SedentaryMinutes"], y=df["total_sleep"])
     plt.xlabel("Sedentary Minutes")
     plt.ylabel("Total Sleep (minutes)")
     plt.title("Sedentary Activity vs. Sleep Duration")
+    st.pyplot(plt.gcf())
 
 
 
@@ -283,7 +284,7 @@ def activity_by_time_blocks(conn):
     plt.title("Calories Burned Breakdown by Time Block")
     plt.xlabel("Time Block")
     plt.ylabel("Total Calories")
-
+    st.pyplot(plt.gcf())
 
 
 
@@ -300,7 +301,7 @@ def steps_by_time_blocks(conn):
     avg_steps.plot(kind="bar", figsize=(8, 5), title="Average Steps per 4-hour Block")
     plt.xlabel("Time Block")
     plt.ylabel("Average Steps")
-
+    st.pyplot(plt.gcf())
 
 
     
@@ -325,7 +326,7 @@ def heart_rate_vs_intensity(user_id, conn):
     plt.ylabel("Heart Rate / Intensity")
     plt.title(f"Heart Rate vs. Exercise Intensity for User {user_id}")
     plt.xticks(rotation=45)
-
+    st.pyplot(plt.gcf())
 
 def weather_vs_activity(weather_df, activity_df):
     activity_df['ActivityDate'] = pd.to_datetime(activity_df['ActivityDate'], errors='coerce')
@@ -337,7 +338,7 @@ def weather_vs_activity(weather_df, activity_df):
     sns.scatterplot(data=merged, x='precip', y='Calories', ax=axs[1])
     axs[1].set_title('Calories vs Precipitation')
     st.pyplot(fig)
-
+    st.pyplot(plt.gcf())
 
 #part 4
 def fill_missing_weight_values(weight_log):
@@ -360,8 +361,9 @@ def fill_missing_weight_values(weight_log):
     return weight_log
 
 # Connect to the Fitbit database
-db_path = 'fitbit_database.db'  # Update this path if necessary
-conn = sqlite3.connect(db_path)
+
+
+
 
 # Load only necessary columns from tables
 daily_activity = pd.read_sql("SELECT Id, Calories AS CaloriesBurned, TotalSteps FROM daily_activity", conn)

@@ -21,7 +21,8 @@ else:
 user_id = st.sidebar.selectbox('Select User ID:', df['Id'].unique())
 min_date, max_date = df['ActivityDate'].min(), df['ActivityDate'].max()
 start_date, end_date = st.sidebar.date_input("Select Date Range", [min_date, max_date])
-
+# single_user = get_individual_data();
+selected_user = st.sidebar.selectbox("Select a User ID", user_id)
 tabs = st.sidebar.radio("Navigation", [
     "General Statistics",
     "Individual Overview",
@@ -47,9 +48,23 @@ elif tabs =="Individual Overview":
     if not user_data.empty:
         st.subheader(f'Statistics for User {user_id}')
         st.write(user_data.drop(columns=['ActivityDate']).describe())
+        plot_calories_burnt(df, selected_user, start_date, end_date)
+        linear_regression_for_user(df, selected_user)
+        plot_regression(df, selected_user)
+        heart_rate_vs_intensity(selected_user,conn)
     else:
         st.error("No data available for the selected user.")
+elif tabs == "Time-based Analysis":
+    st.header("Activity by Time Block")
+    activity_by_time_blocks(conn)
+    steps_by_time_blocks(conn)
+    
 
+elif tabs == "Sleep Analysis":
+    st.header("Sleep and Activity Relationships")
+    sleep_duration(conn)
+    sleep_vs_activity(conn)
+    sedentary_vs_sleep(conn)
 elif tabs == "Weather":
     st.header("Weather vs Activity")
     weather_vs_activity(weather_df, df)
