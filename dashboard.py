@@ -41,6 +41,7 @@ if tabs == "General Statistics":
         printUniqueUsers(df)
         workoutPerDay(df)
         plot_user_class_distribution(conn)
+
 elif tabs =="Individual Overview":
     user_data = df[df['Id'] == user_id].copy()
 
@@ -50,6 +51,18 @@ elif tabs =="Individual Overview":
     else:
         st.error("No data available for the selected user.")
 
+elif tabs == "Time-based Analysis":
+    st.header("Time-based Activity Analysis")
+    activity_by_time_blocks(conn)
+
+elif tabs == "Sleep Analysis":
+    st.header("Sleep Analysis Details")
+    sleep_data = sleep_duration(conn)
+    if not sleep_data.empty:
+        st.write(sleep_data)
+    else:
+        st.write("No sleep data available for the selected range or user.")
+        
 elif tabs == "Weather":
     st.header("Weather vs Activity")
     weather_vs_activity(weather_df, df)

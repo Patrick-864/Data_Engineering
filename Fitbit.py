@@ -211,7 +211,7 @@ def sleep_duration(conn):
     plt.xlabel("Total Sleep Duration (minutes)")
     plt.ylabel("Frequency")
     plt.title("Distribution of Total Sleep Duration")
-    plt.show()
+    st.pyplot(plt.gcf())
 
     return df
 
@@ -424,7 +424,7 @@ if summary_weight_activity.dropna().shape[0] > 0:
     plt.ylabel('Average Calories Burned')
     plt.title('Weight vs. Calories Burned per Individual')
     plt.grid()
-    plt.show()
+    st.pyplot(plt.gcf())
 
 if summary_heart_activity.dropna().shape[0] > 0:
     # Visualization: Heart Rate vs. Total Steps
@@ -434,7 +434,7 @@ if summary_heart_activity.dropna().shape[0] > 0:
     plt.ylabel('Total Steps')
     plt.title('Heart Rate vs. Total Steps per Individual')
     plt.grid()
-    plt.show()
+    st.pyplot(plt.gcf())
 
     # Visualization: Heart Rate vs. Calories Burned
     plt.figure(figsize=(10, 6))
@@ -443,7 +443,7 @@ if summary_heart_activity.dropna().shape[0] > 0:
     plt.ylabel('Average Calories Burned')
     plt.title('Heart Rate vs. Calories Burned per Individual')
     plt.grid()
-    plt.show()
+    st.pyplot(plt.gcf())
 else:
     print("\nNot enough valid data to generate plots.")
     
@@ -527,7 +527,7 @@ def get_summary_stats(user_data):
         plt.xlabel('Date')
         plt.grid(True)
         plt.tight_layout()
-        plt.show()
+        st.pyplot(plt.gcf())
 
 
     if not user_data['heart_rate'].empty:
@@ -540,7 +540,7 @@ def get_summary_stats(user_data):
         plt.xlabel('Heart Rate')
         plt.grid(True)
         plt.tight_layout()
-        plt.show()
+        st.pyplot(plt.gcf())
          
     if not user_data['weight'].empty:
         w = user_data['weight'].sort_values('Date')
@@ -563,7 +563,7 @@ def get_summary_stats(user_data):
         plt.ylabel('Sleep Duration (hours)')
         plt.grid(True)
         plt.tight_layout()
-        plt.show()
+        st.pyplot(plt.gcf())
 
         # Compare sleep and daily steps
         if not user_data['daily_activity'].empty:
@@ -587,7 +587,7 @@ def get_summary_stats(user_data):
             plt.title('Daily Steps and Sleep Duration Over Time')
             fig.tight_layout()
             plt.grid(True)
-            plt.show()
+            st.pyplot(plt.gcf())
 
    
 
