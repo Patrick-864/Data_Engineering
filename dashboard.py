@@ -35,9 +35,8 @@ if tabs == "General Statistics":
     st.header("General Insights")
     if not df.empty:
         st.write("Graphical Summary:")
-        totalDistance(df)  # Assuming this is a graphical summary of total distance per user
+        totalDistance(df)  
         st.write("Numerical Summary:")
-        #st.write(df.describe())  # Provides a numerical summary of the dataset
         st.write(df.drop(columns=['ActivityDate']).describe())
         printUniqueUsers(df)
         workoutPerDay(df)
@@ -49,14 +48,16 @@ elif tabs =="Individual Overview":
     if not user_data.empty:
         st.subheader(f'Statistics for User {user_id}')
         st.write(user_data.drop(columns=['ActivityDate']).describe())
+
         plot_calories_burnt(df, selected_user, start_date, end_date)
         linear_regression_for_user(df, selected_user)
         plot_regression(df, selected_user)
         heart_rate_vs_intensity(selected_user,conn)
+
         dfs = get_user_dataframes(conn)
         user_data = get_individual_data(user_id, dfs, start_date, end_date)
         stats = get_summary_stats(user_data)
-        st.write(stats)
+        
     else:
         st.error("Heart rate data available.")
 

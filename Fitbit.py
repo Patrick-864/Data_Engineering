@@ -13,7 +13,6 @@ import streamlit as st
 #Makes the code adaptable 
 FILENAME = 'daily_activity.csv'
 
-
 #Initializes the CSV file
 def load_csv(filename='daily_activity.csv'):
     try:
@@ -37,22 +36,25 @@ def db_init(dataBase_path="fitbit_database.db"):
         print("Error connecting to database:", e)
         raise
 
-def close_conn():
-    db_init().close();
 
 def printUniqueUsers(df):
   unique_users = df['Id'].nunique()
   print(f"Number of unique users: {unique_users}")
 
 conn = db_init()
+
 def totalDistance(df):
-    total_distance_per_user = df.groupby('Id')['TotalDistance'].sum()
-    plt.figure(figsize=(10,5))
-    plt.bar(total_distance_per_user.index, total_distance_per_user.values)
-    plt.xlabel('User Id')
-    plt.ylabel('Total Distance')
+    total_distance_per_user = df.groupby('Id')['TotalDistance'].sum().sort_values(ascending=False).reset_index()
+
+    plt.figure(figsize=(10, 12))
+    sns.barplot(x='TotalDistance', y='Id', data=total_distance_per_user, palette='Blues_d')
     plt.title('Total Distance per User')
-    st.pyplot(plt.gcf())  
+    plt.xlabel('Total Distance(in km)')
+    plt.ylabel('User ID')
+    plt.tight_layout()
+    st.pyplot(plt.gcf())
+
+
 
 # Function to display calories burnt over a certain date range for a specific user
 def plot_calories_burnt(df, user_id, start_date=None, end_date=None):
@@ -163,10 +165,6 @@ def plot_regression(df, user_id):
     beta_1 = model.params['TotalSteps']
     print(f"\nFor user {user_id}, Beta_1 = {beta_1:.2f}.\n"
           f"Interpretation: Each additional step increases calories burned by ~{beta_1:.2f}.")
-
-
-
-
 
 
 
@@ -380,9 +378,6 @@ def fill_missing_weight_values(weight_log):
     
     return weight_log
 
-# Connect to the Fitbit database
-
-
 
 
 # Load only necessary columns from tables
@@ -518,4 +513,9 @@ def get_summary_stats(user_data):
 
     return stats
 
-conn.close()
+def close_conn():
+    db_init().close();
+
+
+
+close_conn()
